@@ -12,7 +12,11 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve uploaded images
+const uploadsPath = path.join(__dirname, 'uploads');
+console.log('Uploads directory path:', uploadsPath);
+app.use('/uploads', express.static(uploadsPath));
 
 // Configure multer for local storage
 const upload = multer({
@@ -399,6 +403,35 @@ app.patch('/api/admin/artists/:id/toggle-verification', async (req, res) => {
 // Basic route
 app.get('/', (req, res) => {
   res.json({ message: 'Fanpuri Backend API is running! (Firebase Mode)' });
+});
+
+// Test endpoint to check uploads directory
+app.get('/test-uploads', (req, res) => {
+  const fs = require('fs');
+  const uploadsPath = path.join(__dirname, 'uploads');
+  
+  try {
+    if (fs.existsSync(uploadsPath)) {
+      const files = fs.readdirSync(uploadsPath);
+      res.json({ 
+        message: 'Uploads directory exists',
+        path: uploadsPath,
+        files: files,
+        count: files.length
+      });
+    } else {
+      res.json({ 
+        message: 'Uploads directory does not exist',
+        path: uploadsPath
+      });
+    }
+  } catch (error) {
+    res.json({ 
+      message: 'Error checking uploads directory',
+      error: error.message,
+      path: uploadsPath
+    });
+  }
 });
 
 // Error handling middleware
