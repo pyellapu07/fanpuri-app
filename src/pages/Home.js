@@ -42,10 +42,26 @@ const Home = () => {
         // Transform backend data to match frontend format
         const transformedProducts = (data.products || data).map(product => {
           console.log('Raw product from backend:', product); // Debug log
+          console.log('Artist data:', {
+            artist: product.artist,
+            artistName: product.artistName,
+            artistId: product.artistId
+          });
+          
+          // Try different ways to get artist name
+          let artistName = 'Unknown Artist';
+          if (product.artist?.name) {
+            artistName = product.artist.name;
+          } else if (product.artistName) {
+            artistName = product.artistName;
+          } else if (product.artist?.username) {
+            artistName = product.artist.username;
+          }
+          
           return {
             id: product.id,
             name: product.name || 'Untitled Product',
-            artist: product.artist?.name || product.artistName || 'Unknown Artist',
+            artist: artistName,
             price: product.price,
             originalPrice: product.originalPrice,
             image: product.images && product.images.length > 0 ? product.images[0].url : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop',
