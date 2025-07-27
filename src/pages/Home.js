@@ -42,21 +42,8 @@ const Home = () => {
         // Transform backend data to match frontend format
         const transformedProducts = (data.products || data).map(product => {
           console.log('Raw product from backend:', product); // Debug log
-          console.log('Artist data:', {
-            artist: product.artist,
-            artistName: product.artistName,
-            artistId: product.artistId
-          });
-          
-          // Try different ways to get artist name
-          let artistName = 'Unknown Artist';
-          if (product.artist?.name) {
-            artistName = product.artist.name;
-          } else if (product.artistName) {
-            artistName = product.artistName;
-          } else if (product.artist?.username) {
-            artistName = product.artist.username;
-          }
+          // Get artist name from populated artist object
+          const artistName = product.artist?.name || 'Unknown Artist';
           
           return {
             id: product.id,

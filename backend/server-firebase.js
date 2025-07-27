@@ -157,9 +157,25 @@ app.get('/api/products/featured', async (req, res) => {
       ...doc.data()
     }));
     
-    console.log(`Found ${products.length} featured products:`, products.map(p => ({ id: p.id, name: p.name, isFeatured: p.isFeatured })));
+    // Get all artists to populate artist data
+    const artistsSnapshot = await db.collection('artists').get();
+    const artists = artistsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
     
-    res.json({ products });
+    // Populate artist data for each product
+    const productsWithArtists = products.map(product => {
+      const artist = artists.find(a => a.id === product.artist);
+      return {
+        ...product,
+        artist: artist || { name: 'Unknown Artist' }
+      };
+    });
+    
+    console.log(`Found ${productsWithArtists.length} featured products:`, productsWithArtists.map(p => ({ id: p.id, name: p.name, artist: p.artist?.name, isFeatured: p.isFeatured })));
+    
+    res.json({ products: productsWithArtists });
   } catch (error) {
     console.error('Error fetching featured products:', error);
     res.status(500).json({ message: 'Error fetching featured products', error: error.message });
