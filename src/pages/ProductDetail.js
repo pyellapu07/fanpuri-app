@@ -1,151 +1,190 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
   Typography,
   Chip,
   Button,
-  Avatar,
   Rating,
-  Tabs,
-  Tab,
   IconButton,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  TextField,
-  Alert,
   Breadcrumbs,
   Link,
-  Badge,
+  Select,
+  MenuItem,
+  Divider,
+  Card,
+  CardContent,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   Favorite,
-  ShoppingCart,
+  FavoriteBorder,
   Share,
   Star,
   LocalShipping,
   Security,
   Refresh,
-  ZoomIn,
   ArrowBack,
+  ExpandMore,
 } from '@mui/icons-material';
-import { useParams, Link as RouterLink } from 'react-router-dom';
+import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useCart } from '../contexts/CartContext';
+import { auth } from '../firebase-config';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const [selectedTab, setSelectedTab] = useState(0);
+  const navigate = useNavigate();
+  const { cart, addToCart, updateQuantity } = useCart();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
-  // Mock product data
-  const product = {
-    id: 1,
-    name: "Spider-Man: No Way Home Poster",
-    artist: {
-      id: 1,
-      name: "ArtVault Studios",
-      avatar: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=50&h=50&fit=crop",
-    },
-    price: 29.99,
-    originalPrice: 39.99,
-    fandom: "Marvel",
-    format: "Poster",
-    genre: "Action",
-    rating: 4.8,
-    reviews: 127,
-    description: "High-quality poster featuring Spider-Man in his iconic pose from No Way Home. This stunning artwork captures the essence of the beloved superhero in a moment of triumph and determination. Perfect for any Marvel fan's collection.",
-    longDescription: "This exclusive Spider-Man: No Way Home poster is a must-have for any Marvel fan. The artwork showcases Spider-Man in his most iconic pose, capturing the essence of the beloved superhero in a moment of triumph and determination. Printed on premium quality paper with vibrant colors that will last for years to come. The poster comes in a standard size that fits most frames and is perfect for displaying in your home, office, or any space that needs a touch of superhero magic. Each poster is carefully packaged to ensure it arrives in perfect condition. This is an officially licensed product created by talented fan artists who share your passion for the Marvel universe.",
-    specifications: {
-      dimensions: "24\" x 36\" (61cm x 91cm)",
-      material: "Premium matte paper",
-      weight: "0.2 lbs",
-      printing: "High-quality digital print",
-      packaging: "Rolled in protective tube",
-    },
-    images: [
-      "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1531259683001-31fb75551564?w=600&h=800&fit=crop",
-    ],
-    inStock: true,
-    stockQuantity: 45,
-    isLimited: false,
-    endDate: null,
-    tags: ["Spider-Man", "Marvel", "Poster", "No Way Home", "Superhero"],
-    reviews: [
-      {
-        id: 1,
-        user: "MarvelFan123",
-        rating: 5,
-        comment: "Amazing artwork! The Spider-Man poster is even better in person. The colors are vibrant and the quality is outstanding. Highly recommend!",
-        date: "2024-01-15",
-        verified: true,
-      },
-      {
-        id: 2,
-        user: "SpideyLover",
-        rating: 4,
-        comment: "Great quality poster. The artwork is stunning and it arrived in perfect condition. Will definitely buy more from this artist!",
-        date: "2024-01-10",
-        verified: true,
-      },
-      {
-        id: 3,
-        user: "ComicCollector",
-        rating: 5,
-        comment: "Perfect addition to my Marvel collection. The poster looks exactly like the image and the shipping was fast.",
-        date: "2024-01-08",
-        verified: false,
-      },
-    ],
-    relatedProducts: [
-      {
-        id: 2,
-        name: "Batman: The Dark Knight Print",
-        price: 34.99,
-        image: "https://images.unsplash.com/photo-1531259683001-31fb75551564?w=300&h=400&fit=crop",
-        fandom: "DC Comics",
-      },
-      {
-        id: 3,
-        name: "Avengers: Endgame Limited Edition",
-        price: 59.99,
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=400&fit=crop",
-        fandom: "Marvel",
-      },
-      {
-        id: 4,
-        name: "Iron Man Arc Reactor T-Shirt",
-        price: 24.99,
-        image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=400&fit=crop",
-        fandom: "Marvel",
-      },
-    ],
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
-  const handleTabChange = (event, newValue) => {
-    setSelectedTab(newValue);
-  };
+  // Fetch product data from backend
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        
+        // Add timeout for Render's spin-up delay
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        
+        const response = await fetch(`https://fanpuri-app-1.onrender.com/api/products/${id}`, {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch product: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        // Transform backend data to match frontend format
+        const transformedProduct = {
+          id: data.product.id,
+          name: data.product.name || 'Untitled Product',
+          artist: {
+            id: data.product.artist?.id || 1,
+            name: data.product.artist?.name || 'Unknown Artist',
+            avatar: data.product.artist?.avatar || 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=50&h=50&fit=crop',
+          },
+          price: data.product.price,
+          originalPrice: data.product.originalPrice,
+          fandom: data.product.category || 'General',
+          format: data.product.format || 'Print',
+          genre: data.product.genre || 'General',
+          rating: data.product.rating || 4.5,
+          reviews: data.product.reviewCount || 0,
+          description: data.product.description || 'No description available.',
+          longDescription: data.product.longDescription || data.product.description || 'No detailed description available.',
+          specifications: {
+            dimensions: data.product.dimensions || "24\" x 36\" (61cm x 91cm)",
+            material: data.product.material || "Premium matte paper",
+            weight: data.product.weight || "0.2 lbs",
+            printing: data.product.printing || "High-quality digital print",
+            packaging: data.product.packaging || "Rolled in protective tube",
+          },
+          images: data.product.images && data.product.images.length > 0 
+            ? data.product.images.map(img => img.url)
+            : ["https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop"],
+          inStock: data.product.inStock !== false,
+          stockQuantity: data.product.stockQuantity || 50,
+          isLimited: data.product.isLimited || false,
+          endDate: data.product.endDate,
+          tags: data.product.tags || ["Fan Art", "Limited Edition"],
+        };
+        
+        setProduct(transformedProduct);
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        
+        if (err.name === 'AbortError') {
+          setError('Server is starting up... Please wait a moment and refresh the page.');
+        } else {
+          setError(`Failed to load product: ${err.message}. The server might be starting up.`);
+        }
+        
+        // Fallback to mock data
+        setProduct({
+          id: parseInt(id),
+          name: "Spider-Man: No Way Home Poster",
+          artist: {
+            id: 1,
+            name: "ArtVault Studios",
+            avatar: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=50&h=50&fit=crop",
+          },
+          price: 29.99,
+          originalPrice: 39.99,
+          fandom: "Marvel",
+          format: "Poster",
+          genre: "Action",
+          rating: 4.8,
+          reviews: 127,
+          description: "High-quality poster featuring Spider-Man in his iconic pose from No Way Home.",
+          longDescription: "This exclusive Spider-Man: No Way Home poster is a must-have for any Marvel fan. The artwork showcases Spider-Man in his most iconic pose, capturing the essence of the beloved superhero in a moment of triumph and determination.",
+          specifications: {
+            dimensions: "24\" x 36\" (61cm x 91cm)",
+            material: "Premium matte paper",
+            weight: "0.2 lbs",
+            printing: "High-quality digital print",
+            packaging: "Rolled in protective tube",
+          },
+          images: [
+            "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=800&fit=crop",
+          ],
+          inStock: true,
+          stockQuantity: 45,
+          isLimited: false,
+          endDate: null,
+          tags: ["Spider-Man", "Marvel", "Poster", "No Way Home", "Superhero"],
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  const [product, setProduct] = useState(null);
+
+  const cartItem = cart.find((item) => item.id === parseInt(id));
 
   const handleQuantityChange = (event) => {
     const value = parseInt(event.target.value);
-    if (value > 0 && value <= product.stockQuantity) {
+    if (value > 0 && value <= product?.stockQuantity) {
       setQuantity(value);
     }
   };
 
   const handleAddToCart = () => {
-    // Add to cart logic here
-    console.log(`Adding ${quantity} of ${product.name} to cart`);
+    if (!user) {
+      setLoginDialogOpen(true);
+      return;
+    }
+    
+    if (cartItem) {
+      updateQuantity(parseInt(id), cartItem.quantity + quantity);
+    } else {
+      addToCart({ ...product, quantity });
+    }
   };
 
   const handleWishlist = () => {
@@ -153,362 +192,448 @@ const ProductDetail = () => {
   };
 
   const calculateDiscount = () => {
+    if (!product?.originalPrice) return 0;
     return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
   };
 
+  if (loading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography sx={{ mt: 2 }}>
+          Loading product details...
+          <br />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            This may take up to 30 seconds if the server is starting up
+          </Typography>
+        </Typography>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 8 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+        <Button
+          variant="outlined"
+          onClick={() => window.location.reload()}
+          sx={{ mr: 2 }}
+        >
+          Retry
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => navigate('/shop')}
+        >
+          Back to Shop
+        </Button>
+      </Container>
+    );
+  }
+
+  if (!product) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 8 }}>
+        <Alert severity="warning">
+          Product not found
+        </Alert>
+      </Container>
+    );
+  }
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Breadcrumbs */}
-      <Breadcrumbs sx={{ mb: 3 }}>
-        <Link component={RouterLink} color="inherit" to="/">
-          Home
-        </Link>
-        <Link component={RouterLink} color="inherit" to="/shop">
-          Shop
-        </Link>
-        <Link component={RouterLink} color="inherit" to={`/shop?fandom=${product.fandom.toLowerCase()}`}>
-          {product.fandom}
-        </Link>
-        <Typography color="text.primary">{product.name}</Typography>
-      </Breadcrumbs>
-
-      <Grid container spacing={4}>
-        {/* Product Images */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardMedia
-              component="img"
-              height="600"
-              image={product.images[selectedImage]}
-              alt={product.name}
-              sx={{ objectFit: 'cover' }}
-            />
-          </Card>
-          
-          {/* Thumbnail Images */}
-          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-            {product.images.map((image, index) => (
-              <Card
-                key={index}
-                sx={{
-                  width: 80,
-                  height: 80,
-                  cursor: 'pointer',
-                  border: selectedImage === index ? 2 : 1,
-                  borderColor: selectedImage === index ? 'primary.main' : 'grey.300',
-                }}
-                onClick={() => setSelectedImage(index)}
-              >
-                <CardMedia
-                  component="img"
-                  height="80"
-                  image={image}
-                  alt={`${product.name} ${index + 1}`}
-                  sx={{ objectFit: 'cover' }}
-                />
-              </Card>
-            ))}
-          </Box>
-        </Grid>
-
-        {/* Product Info */}
-        <Grid item xs={12} md={6}>
-          <Box>
-            {/* Fandom Tag */}
-            <Chip
-              label={product.fandom}
-              sx={{ mb: 2, bgcolor: 'primary.main', color: 'white' }}
-            />
-
-            {/* Product Title */}
-            <Typography variant="h3" component="h1" gutterBottom>
+    <Box sx={{ bgcolor: 'white', minHeight: '100vh' }}>
+      <Container maxWidth="xl" sx={{ py: 0, px: { xs: 2, md: 0 } }}>
+        {/* Breadcrumbs */}
+        <Box sx={{ py: 3, borderBottom: '1px solid #e0e0e0' }}>
+          <Breadcrumbs sx={{ fontSize: '0.875rem' }}>
+            <Link component={RouterLink} color="inherit" to="/" sx={{ textDecoration: 'none' }}>
+              Home
+            </Link>
+            <Link component={RouterLink} color="inherit" to="/shop" sx={{ textDecoration: 'none' }}>
+              Shop
+            </Link>
+            <Link component={RouterLink} color="inherit" to={`/shop?fandom=${product.fandom.toLowerCase()}`} sx={{ textDecoration: 'none' }}>
+              {product.fandom}
+            </Link>
+            <Typography color="text.primary" sx={{ fontWeight: 500 }}>
               {product.name}
             </Typography>
+          </Breadcrumbs>
+        </Box>
 
-            {/* Artist Info */}
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Avatar src={product.artist.avatar} sx={{ mr: 2 }} />
-              <Box>
-                <Typography variant="subtitle1">
-                  by{' '}
-                  <Link
-                    component={RouterLink}
-                    to={`/artist/${product.artist.id}`}
-                    color="primary"
-                    sx={{ textDecoration: 'none' }}
-                  >
-                    {product.artist.name}
-                  </Link>
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Rating */}
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Rating value={product.rating} precision={0.1} readOnly />
-              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                ({product.reviews} reviews)
-              </Typography>
-            </Box>
-
-            {/* Price */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h4" color="primary.main" fontWeight={600} sx={{ mr: 2 }}>
-                ${product.price}
-              </Typography>
-              {product.originalPrice && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="h6" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
-                    ${product.originalPrice}
-                  </Typography>
-                  <Chip
-                    label={`${calculateDiscount()}% OFF`}
-                    color="error"
-                    size="small"
-                  />
-                </Box>
-              )}
-            </Box>
-
-            {/* Stock Status */}
-            <Box sx={{ mb: 3 }}>
-              {product.inStock ? (
-                <Typography variant="body2" color="success.main" sx={{ display: 'flex', alignItems: 'center' }}>
-                  ✓ In Stock ({product.stockQuantity} available)
-                </Typography>
-              ) : (
-                <Typography variant="body2" color="error.main">
-                  Out of Stock
-                </Typography>
-              )}
-            </Box>
-
-            {/* Quantity and Add to Cart */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Quantity
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                <TextField
-                  type="number"
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                  inputProps={{ min: 1, max: product.stockQuantity }}
-                  sx={{ width: 100 }}
-                />
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<ShoppingCart />}
-                  onClick={handleAddToCart}
-                  disabled={!product.inStock}
-                  sx={{ flexGrow: 1 }}
-                >
-                  Add to Cart
-                </Button>
-                <IconButton
-                  color={isWishlisted ? "primary" : "default"}
-                  onClick={handleWishlist}
-                >
-                  <Favorite />
-                </IconButton>
-                <IconButton>
-                  <Share />
-                </IconButton>
-              </Box>
-            </Box>
-
-            {/* Product Tags */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Tags
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {product.tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    variant="outlined"
-                    size="small"
-                  />
-                ))}
-              </Box>
-            </Box>
-
-            {/* Shipping Info */}
-            <Card sx={{ p: 2, mb: 3 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Shipping & Returns
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <LocalShipping sx={{ mr: 1, fontSize: 20 }} />
-                <Typography variant="body2">
-                  Free shipping on orders over $50
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Security sx={{ mr: 1, fontSize: 20 }} />
-                <Typography variant="body2">
-                  Secure payment processing
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Refresh sx={{ mr: 1, fontSize: 20 }} />
-                <Typography variant="body2">
-                  30-day return policy
-                </Typography>
-              </Box>
-            </Card>
-          </Box>
-        </Grid>
-      </Grid>
-
-      {/* Product Details Tabs */}
-      <Box sx={{ mt: 6 }}>
-        <Tabs value={selectedTab} onChange={handleTabChange} sx={{ mb: 3 }}>
-          <Tab label="Description" />
-          <Tab label="Specifications" />
-          <Tab label="Reviews" />
-        </Tabs>
-
-        {/* Tab Content */}
-        {selectedTab === 0 && (
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Product Description
-              </Typography>
-              <Typography variant="body1" paragraph>
-                {product.longDescription}
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
-
-        {selectedTab === 1 && (
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Product Specifications
-              </Typography>
-              <Grid container spacing={2}>
-                {Object.entries(product.specifications).map(([key, value]) => (
-                  <Grid item xs={12} sm={6} key={key}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
-                        {key.replace(/([A-Z])/g, ' $1').trim()}:
-                      </Typography>
-                      <Typography variant="body2">
-                        {value}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </CardContent>
-          </Card>
-        )}
-
-        {selectedTab === 2 && (
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">
-                  Customer Reviews ({product.reviews})
-                </Typography>
-                <Button variant="outlined">
-                  Write a Review
-                </Button>
-              </Box>
-              
-              <List>
-                {product.reviews.map((review) => (
-                  <React.Fragment key={review.id}>
-                    <ListItem alignItems="flex-start">
-                      <ListItemAvatar>
-                        <Avatar>{review.user[0]}</Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="subtitle2" sx={{ mr: 2 }}>
-                              {review.user}
-                            </Typography>
-                            <Rating value={review.rating} size="small" readOnly />
-                            {review.verified && (
-                              <Chip
-                                label="Verified Purchase"
-                                size="small"
-                                color="success"
-                                sx={{ ml: 2 }}
-                              />
-                            )}
-                            <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
-                              {new Date(review.date).toLocaleDateString()}
-                            </Typography>
-                          </Box>
-                        }
-                        secondary={
-                          <Typography variant="body1">
-                            {review.comment}
-                          </Typography>
-                        }
-                      />
-                    </ListItem>
-                    <Divider variant="inset" component="li" />
-                  </React.Fragment>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        )}
-      </Box>
-
-      {/* Related Products */}
-      <Box sx={{ mt: 6 }}>
-        <Typography variant="h5" gutterBottom>
-          You Might Also Like
-        </Typography>
-        <Grid container spacing={3}>
-          {product.relatedProducts.map((relatedProduct) => (
-            <Grid item xs={12} sm={6} md={3} key={relatedProduct.id}>
-              <Card
-                component={RouterLink}
-                to={`/product/${relatedProduct.id}`}
+        <Grid container spacing={0}>
+          {/* Product Images - Left Side */}
+          <Grid item xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
+            <Box sx={{ position: 'relative' }}>
+              {/* Main Product Image */}
+              <Box
+                component="img"
+                src={product.images[selectedImage]}
+                alt={product.name}
                 sx={{
-                  textDecoration: 'none',
-                  height: '100%',
-                  transition: 'transform 0.2s',
+                  width: '100%',
+                  height: { xs: 400, sm: 500, md: 600 },
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  mb: 2,
+                }}
+              />
+              
+              {/* Wishlist Icon */}
+              <IconButton
+                onClick={handleWishlist}
+                sx={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  bgcolor: 'rgba(255,255,255,0.9)',
                   '&:hover': {
-                    transform: 'translateY(-4px)',
+                    bgcolor: 'rgba(255,255,255,1)',
                   },
                 }}
               >
-                <CardMedia
-                  component="img"
-                  height="250"
-                  image={relatedProduct.image}
-                  alt={relatedProduct.name}
-                />
-                <CardContent>
-                  <Chip
-                    label={relatedProduct.fandom}
-                    size="small"
-                    sx={{ mb: 1, bgcolor: 'primary.main', color: 'white' }}
+                {isWishlisted ? <Favorite color="error" /> : <FavoriteBorder />}
+              </IconButton>
+
+              {/* Thumbnail Images */}
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {product.images.map((image, index) => (
+                  <Box
+                    key={index}
+                    component="img"
+                    src={image}
+                    alt={`${product.name} ${index + 1}`}
+                    onClick={() => setSelectedImage(index)}
+                    sx={{
+                      width: 80,
+                      height: 80,
+                      objectFit: 'cover',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      border: selectedImage === index ? '2px solid #000' : '1px solid #e0e0e0',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        borderColor: '#000',
+                      },
+                    }}
                   />
-                  <Typography variant="h6" component="h3" gutterBottom>
-                    {relatedProduct.name}
+                ))}
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Product Info - Right Side */}
+          <Grid item xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
+            <Box>
+              {/* Fandom Badge */}
+              <Chip
+                label={product.fandom}
+                sx={{
+                  mb: 2,
+                  bgcolor: '#000',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              />
+
+              {/* Product Title */}
+              <Typography 
+                variant="h3" 
+                component="h1" 
+                sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
+                  lineHeight: 1.2,
+                  mb: 2,
+                  color: '#000',
+                }}
+              >
+                {product.name}
+              </Typography>
+
+              {/* Artist Info */}
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <Box
+                  component="img"
+                  src={product.artist.avatar}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    mr: 2,
+                    objectFit: 'cover',
+                  }}
+                />
+                <Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                    by{' '}
+                    <Link
+                      component={RouterLink}
+                      to={`/artist/${product.artist.id}`}
+                      sx={{
+                        color: '#000',
+                        textDecoration: 'none',
+                        fontWeight: 600,
+                        '&:hover': {
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      {product.artist.name}
+                    </Link>
                   </Typography>
-                  <Typography variant="h6" color="primary.main" fontWeight={600}>
-                    ${relatedProduct.price}
+                </Box>
+              </Box>
+
+              {/* Rating */}
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <Rating 
+                  value={product.rating} 
+                  precision={0.1} 
+                  readOnly 
+                  sx={{ mr: 1 }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  ({product.reviews} reviews)
+                </Typography>
+              </Box>
+
+              {/* Price Section */}
+              <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      fontWeight: 700,
+                      fontSize: { xs: '1.5rem', sm: '2rem' },
+                      color: '#000',
+                    }}
+                  >
+                    ₹{product.price}
                   </Typography>
-                </CardContent>
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          textDecoration: 'line-through',
+                          color: '#666',
+                          fontWeight: 400,
+                        }}
+                      >
+                        ₹{product.originalPrice}
+                      </Typography>
+                      <Chip
+                        label={`${calculateDiscount()}% OFF`}
+                        sx={{
+                          bgcolor: '#e74c3c',
+                          color: 'white',
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                        }}
+                      />
+                    </>
+                  )}
+                </Box>
+                
+                {/* Payment Options */}
+                <Typography variant="body2" color="text.secondary">
+                  4 interest-free payments with Afterpay
+                </Typography>
+              </Box>
+
+              {/* Stock Status */}
+              <Box sx={{ mb: 4 }}>
+                {product.inStock ? (
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: '#2ecc71',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    ✓ In Stock ({product.stockQuantity} available)
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" color="error.main" fontWeight={600}>
+                    Out of Stock
+                  </Typography>
+                )}
+              </Box>
+
+              {/* Quantity and Add to Cart */}
+              <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, minWidth: 80 }}>
+                    Quantity
+                  </Typography>
+                  {cartItem ? (
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      sx={{
+                        bgcolor: '#000',
+                        color: '#fff',
+                        borderRadius: '50px',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        py: 1.5,
+                        textTransform: 'uppercase',
+                        boxShadow: 'none',
+                        letterSpacing: '0.5px',
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        px: 3,
+                      }}
+                    >
+                      <span>IN CART</span>
+                      <Select
+                        value={cartItem.quantity}
+                        onChange={e => updateQuantity(parseInt(id), Number(e.target.value))}
+                        size="small"
+                        sx={{
+                          bgcolor: 'rgba(255,255,255,0.2)',
+                          borderRadius: '50px',
+                          fontWeight: 700,
+                          minWidth: 50,
+                          fontSize: '0.8rem',
+                          color: 'white',
+                          '& .MuiSelect-select': { 
+                            textAlign: 'center', 
+                            py: 0.5,
+                            color: 'white',
+                            pr: 1,
+                          },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            border: 'none',
+                          },
+                          '& .MuiSvgIcon-root': {
+                            color: 'white',
+                          },
+                        }}
+                      >
+                        {[...Array(12)].map((_, i) => (
+                          <MenuItem key={i + 1} value={i + 1} sx={{ fontSize: '0.8rem' }}>
+                            {i + 1}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </Button>
+                  ) : (
+                    <>
+                      <Select
+                        value={quantity}
+                        onChange={handleQuantityChange}
+                        size="small"
+                        sx={{
+                          minWidth: 80,
+                          height: 45,
+                          borderRadius: '50px',
+                          '& .MuiSelect-select': {
+                            textAlign: 'center',
+                            py: 1,
+                          },
+                        }}
+                      >
+                        {[...Array(Math.min(12, product.stockQuantity))].map((_, i) => (
+                          <MenuItem key={i + 1} value={i + 1}>
+                            {i + 1}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={handleAddToCart}
+                        disabled={!product.inStock}
+                        sx={{
+                          bgcolor: '#F3F3F7',
+                          color: 'black',
+                          textTransform: 'uppercase',
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          py: 1.5,
+                          borderRadius: '50px',
+                          letterSpacing: '0.5px',
+                          boxShadow: 'none',
+                          '&:hover': {
+                            bgcolor: '#e0e0e0',
+                          },
+                        }}
+                      >
+                        Add to Cart
+                      </Button>
+                    </>
+                  )}
+                </Box>
+              </Box>
+
+              {/* Final Sale Notice */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#e74c3c' }}>
+                  THIS ITEM IS FINAL SALE.
+                </Typography>
+              </Box>
+
+              {/* Gift Box Option */}
+              <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <input type="checkbox" id="giftBox" />
+                  <label htmlFor="giftBox">
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      Gift Box (₹3.50)
+                    </Typography>
+                  </label>
+                </Box>
+              </Box>
+
+              {/* Product Description */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="body1" sx={{ lineHeight: 1.6, color: '#333' }}>
+                  {product.description}
+                </Typography>
+              </Box>
+
+              {/* Shipping Info */}
+              <Card sx={{ p: 3, bgcolor: '#f8f9fa', borderRadius: '8px' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
+                  Shipping & Returns
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <LocalShipping sx={{ mr: 1, fontSize: 20, color: '#666' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Free shipping on orders over ₹500
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <Security sx={{ mr: 1, fontSize: 20, color: '#666' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Secure payment processing
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Refresh sx={{ mr: 1, fontSize: 20, color: '#666' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    30-day return policy
+                  </Typography>
+                </Box>
               </Card>
-            </Grid>
-          ))}
+            </Box>
+          </Grid>
         </Grid>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 
