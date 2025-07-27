@@ -46,7 +46,7 @@ const Artists = () => {
     const fetchArtists = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/artists');
+        const response = await fetch('https://fanpuri-app-1.onrender.com/api/artists');
         if (!response.ok) {
           throw new Error('Failed to fetch artists');
         }
