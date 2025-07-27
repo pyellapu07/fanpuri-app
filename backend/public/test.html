@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .alert { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Test Upload Form</h1>
+    
+    <form id="testForm">
+        <div class="form-group">
+            <label for="name">Product Name *</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="artistName">Artist Name *</label>
+            <input type="text" id="artistName" name="artistName" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="price">Price *</label>
+            <input type="number" id="price" name="price" step="0.01" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+                <option value="">Select Category</option>
+                <option value="Marvel">Marvel</option>
+                <option value="DC Comics">DC Comics</option>
+                <option value="Anime">Anime</option>
+                <option value="Tollywood">Tollywood</option>
+                <option value="Star Wars">Star Wars</option>
+                <option value="Harry Potter">Harry Potter</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="images">Images</label>
+            <input type="file" id="images" name="images" multiple accept="image/*">
+        </div>
+        
+        <button type="submit">Test Upload</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        
+        // Test API connection
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/stats`);
+                const data = await response.json();
+                console.log('API Connection Test:', data);
+                showResult('API Connection: SUCCESS', 'success');
+            } catch (error) {
+                console.error('API Connection Test Failed:', error);
+                showResult('API Connection: FAILED - ' + error.message, 'error');
+            }
+        }
+        
+        // Form submission
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('Form submitted');
+            
+            const formData = new FormData();
+            const form = e.target;
+            
+            // Add form fields
+            formData.append('name', form.name.value);
+            formData.append('artistName', form.artistName.value);
+            formData.append('price', form.price.value);
+            formData.append('category', form.category.value);
+            
+            // Add images
+            const imageFiles = form.images.files;
+            Array.from(imageFiles).forEach(file => {
+                formData.append('images', file);
+            });
+            
+            console.log('FormData created:', formData);
+            
+            try {
+                console.log('Sending request to:', `${API_BASE}/upload/product`);
+                const response = await fetch(`${API_BASE}/upload/product`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response data:', result);
+                
+                if (response.ok) {
+                    showResult('Upload SUCCESS: ' + JSON.stringify(result, null, 2), 'success');
+                } else {
+                    showResult('Upload FAILED: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showResult('Upload ERROR: ' + error.message, 'error');
+            }
+        });
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="alert ${type}">${message}</div>`;
+        }
+        
+        // Test connection on page load
+        testConnection();
+    </script>
+</body>
+</html> 

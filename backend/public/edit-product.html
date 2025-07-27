@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product - Fanpuri Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .file-upload {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .file-upload:hover {
+            background: #e8ecff;
+            border-color: #5a6fd8;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .preview-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .preview-image {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .preview-image img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .current-images {
+            margin-bottom: 20px;
+        }
+
+        .current-images h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .artist-section {
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+        }
+
+        .artist-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Edit Product</h1>
+            <p>Update product details and images</p>
+        </div>
+
+        <div class="content">
+            <div id="loading" class="loading">
+                <h3>Loading product details...</h3>
+            </div>
+
+            <div id="error" class="alert alert-error hidden">
+                <strong>Error:</strong> <span id="errorMessage"></span>
+            </div>
+
+            <div id="success" class="alert alert-success hidden">
+                <strong>Success:</strong> <span id="successMessage"></span>
+            </div>
+
+            <form id="editForm" class="hidden">
+                <div class="form-group">
+                    <label for="productName">Product Name *</label>
+                    <input type="text" id="productName" name="name" required>
+                </div>
+
+                <div class="artist-section">
+                    <h3>Artist Information</h3>
+                    <div class="form-group">
+                        <label for="artistSelect">Select Artist *</label>
+                        <select id="artistSelect" name="artistSelect" required>
+                            <option value="">Select an existing artist</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="addNewArtist" name="addNewArtist">
+                            Change to New Artist
+                        </label>
+                    </div>
+
+                    <div class="form-group hidden" id="newArtistFields">
+                        <label for="newArtistName">New Artist Name *</label>
+                        <input type="text" id="newArtistName" name="newArtistName" placeholder="Enter new artist name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="price">Price (₹) *</label>
+                        <input type="number" id="price" name="price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="originalPrice">Original Price (₹)</label>
+                        <input type="number" id="originalPrice" name="originalPrice" step="0.01">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="">Select Category</option>
+                            <option value="Marvel">Marvel</option>
+                            <option value="DC Comics">DC Comics</option>
+                            <option value="Anime">Anime</option>
+                            <option value="Tollywood">Tollywood</option>
+                            <option value="Star Wars">Star Wars</option>
+                            <option value="Harry Potter">Harry Potter</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="printType">Print Type</label>
+                        <select id="printType" name="printType">
+                            <option value="Digital Print">Digital Print</option>
+                            <option value="Canvas">Canvas</option>
+                            <option value="Framed">Framed</option>
+                            <option value="Sticker">Sticker</option>
+                            <option value="T-Shirt">T-Shirt</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tags">Tags (comma-separated)</label>
+                    <input type="text" id="tags" name="tags" placeholder="e.g., poster, limited, exclusive">
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="isLimitedEdition" name="isLimitedEdition">
+                        Limited Edition
+                    </label>
+                </div>
+
+                <div id="limitedEditionFields" class="hidden">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="totalCopies">Total Copies</label>
+                            <input type="number" id="totalCopies" name="totalCopies" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">End Date</label>
+                            <input type="date" id="endDate" name="endDate">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="current-images">
+                    <h3>Current Images</h3>
+                    <div id="currentImagesGrid" class="preview-images">
+                        <!-- Current images will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Add New Images</label>
+                    <div class="file-upload" onclick="document.getElementById('newImages').click()">
+                        <p>Click to select additional images (up to 5)</p>
+                        <input type="file" id="newImages" name="images" multiple accept="image/*">
+                    </div>
+                    <div id="newImagesPreview" class="preview-images">
+                        <!-- New image previews will be shown here -->
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; display: flex; gap: 15px;">
+                    <button type="submit" class="btn btn-primary">Update Product</button>
+                    <button type="button" onclick="window.close()" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let currentProduct = null;
+        let currentImages = [];
+
+        // Get product ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (!productId) {
+            showError('No product ID provided');
+        } else {
+            loadProduct();
+            loadArtists();
+        }
+
+        // Load product details
+        async function loadProduct() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/products/${productId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch product');
+                }
+                
+                const data = await response.json();
+                currentProduct = data.product;
+                currentImages = currentProduct.images || [];
+                
+                populateForm();
+                displayCurrentImages();
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('editForm').classList.remove('hidden');
+            } catch (error) {
+                showError('Error loading product: ' + error.message);
+            }
+        }
+
+        // Load artists for dropdown
+        async function loadArtists() {
+            try {
+                const response = await fetch(`${API_BASE}/artists`);
+                const data = await response.json();
+                
+                const select = document.getElementById('artistSelect');
+                select.innerHTML = '<option value="">Select an existing artist</option>';
+                
+                data.artists.forEach(artist => {
+                    const option = document.createElement('option');
+                    option.value = artist.id;
+                    option.textContent = artist.name;
+                    if (currentProduct && currentProduct.artist && currentProduct.artist.id === artist.id) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading artists:', error);
+            }
+        }
+
+        // Populate form with current product data
+        function populateForm() {
+            document.getElementById('productName').value = currentProduct.name || '';
+            document.getElementById('description').value = currentProduct.description || '';
+            document.getElementById('price').value = currentProduct.price || '';
+            document.getElementById('originalPrice').value = currentProduct.originalPrice || '';
+            document.getElementById('category').value = currentProduct.category || '';
+            document.getElementById('printType').value = currentProduct.printType || 'Digital Print';
+            document.getElementById('tags').value = currentProduct.tags ? currentProduct.tags.join(', ') : '';
+            document.getElementById('isLimitedEdition').checked = currentProduct.isLimitedEdition || false;
+            document.getElementById('totalCopies').value = currentProduct.totalCopies || '';
+            document.getElementById('endDate').value = currentProduct.endDate || '';
+            
+            // Show/hide limited edition fields
+            toggleLimitedEditionFields();
+        }
+
+        // Display current images
+        function displayCurrentImages() {
+            const grid = document.getElementById('currentImagesGrid');
+            grid.innerHTML = '';
+            
+            currentImages.forEach((image, index) => {
+                const div = document.createElement('div');
+                div.className = 'preview-image';
+                div.innerHTML = `
+                    <img src="http://localhost:5000${image.url}" alt="Product image ${index + 1}">
+                    <button type="button" class="remove-image" onclick="removeCurrentImage(${index})">×</button>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // Remove current image
+        function removeCurrentImage(index) {
+            if (confirm('Are you sure you want to remove this image?')) {
+                currentImages.splice(index, 1);
+                displayCurrentImages();
+            }
+        }
+
+        // Toggle limited edition fields
+        function toggleLimitedEditionFields() {
+            const isLimited = document.getElementById('isLimitedEdition').checked;
+            const fields = document.getElementById('limitedEditionFields');
+            fields.classList.toggle('hidden', !isLimited);
+        }
+
+        // New artist toggle
+        document.getElementById('addNewArtist').addEventListener('change', function(e) {
+            const artistSelect = document.getElementById('artistSelect');
+            const newArtistFields = document.getElementById('newArtistFields');
+            
+            if (e.target.checked) {
+                artistSelect.disabled = true;
+                artistSelect.required = false;
+                newArtistFields.classList.remove('hidden');
+                document.getElementById('newArtistName').required = true;
+            } else {
+                artistSelect.disabled = false;
+                artistSelect.required = true;
+                newArtistFields.classList.add('hidden');
+                document.getElementById('newArtistName').required = false;
+            }
+        });
+
+        // Limited edition toggle
+        document.getElementById('isLimitedEdition').addEventListener('change', toggleLimitedEditionFields);
+
+        // New images preview
+        document.getElementById('newImages').addEventListener('change', function(e) {
+            const preview = document.getElementById('newImagesPreview');
+            preview.innerHTML = '';
+            
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'preview-image';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="New image preview">
+                    `;
+                    preview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Form submission
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const form = e.target;
+            
+            // Add form fields
+            formData.append('name', form.name.value);
+            
+            // Handle artist selection
+            if (form.addNewArtist.checked) {
+                formData.append('artistName', form.newArtistName.value);
+                formData.append('isNewArtist', 'true');
+            } else {
+                formData.append('artistName', form.artistSelect.options[form.artistSelect.selectedIndex].text);
+                formData.append('artistId', form.artistSelect.value);
+                formData.append('isNewArtist', 'false');
+            }
+            
+            formData.append('description', form.description.value);
+            formData.append('price', form.price.value);
+            formData.append('originalPrice', form.originalPrice.value);
+            formData.append('category', form.category.value);
+            formData.append('printType', form.printType.value);
+            formData.append('tags', form.tags.value);
+            formData.append('isLimitedEdition', form.isLimitedEdition.checked);
+            
+            if (form.isLimitedEdition.checked) {
+                formData.append('totalCopies', form.totalCopies.value);
+                formData.append('endDate', form.endDate.value);
+            }
+            
+            // Add new images
+            const imageFiles = form.images.files;
+            Array.from(imageFiles).forEach(file => {
+                formData.append('images', file);
+            });
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Product updated successfully!');
+                    setTimeout(() => {
+                        window.close();
+                    }, 2000);
+                } else {
+                    showError(result.message || 'Error updating product');
+                }
+            } catch (error) {
+                showError('Error updating product: ' + error.message);
+            }
+        });
+
+        // Show success message
+        function showSuccess(message) {
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('success').classList.remove('hidden');
+            document.getElementById('error').classList.add('hidden');
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+            document.getElementById('success').classList.add('hidden');
+            document.getElementById('loading').classList.add('hidden');
+        }
+    </script>
+</body>
+</html> 
