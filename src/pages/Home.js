@@ -33,9 +33,19 @@ const Home = () => {
     const fetchFeaturedProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://fanpuri-app-1.onrender.com/api/products/featured');
+        
+        // Add timeout for Render's spin-up delay
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        const response = await fetch('https://fanpuri-app-1.onrender.com/api/products/featured', {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch products');
+          throw new Error(`Failed to fetch products: ${response.status}`);
         }
         const data = await response.json();
         
@@ -63,7 +73,14 @@ const Home = () => {
         setFeaturedProducts(transformedProducts);
       } catch (err) {
         console.error('Error fetching featured products:', err);
-        setError(err.message);
+        
+        // Check if it's a timeout/abort error (server spinning up)
+        if (err.name === 'AbortError') {
+          setError('Server is starting up... Please wait a moment and refresh the page.');
+        } else {
+          setError(`Failed to load products: ${err.message}. The server might be starting up.`);
+        }
+        
         // Fallback to mock data if API fails
         setFeaturedProducts([
     {
@@ -383,7 +400,14 @@ const Home = () => {
           
           {loading && (
             <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography>Loading featured products...</Typography>
+              <CircularProgress />
+              <Typography sx={{ mt: 2 }}>
+                Loading featured products...
+                <br />
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  This may take up to 30 seconds if the server is starting up
+                </Typography>
+              </Typography>
             </Box>
           )}
           
