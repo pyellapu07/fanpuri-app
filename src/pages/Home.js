@@ -22,7 +22,6 @@ import {
 import { Link } from 'react-router-dom';
 
 const Home = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   // State for featured products
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -121,21 +120,7 @@ const Home = () => {
     { name: 'Harry Potter', color: '#2ecc71', icon: '🧙‍♂️' },
   ];
 
-  const visibleProducts = Math.min(5, featuredProducts.length);
-  const canGoNext = currentIndex < featuredProducts.length - visibleProducts + 2; // Account for extra space
-  const canGoPrev = currentIndex > 0;
 
-  const handleNext = () => {
-    if (canGoNext) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
-
-  const handlePrev = () => {
-    if (canGoPrev) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
 
   return (
     <Box>
@@ -426,50 +411,48 @@ const Home = () => {
                     {!loading && !error && featuredProducts.length > 0 && (
             <Box sx={{ 
               position: 'relative', 
-              overflow: 'hidden', 
               pb: 4,
-              // Ensure proper scrolling on mobile
-              WebkitOverflowScrolling: 'touch',
-              scrollBehavior: 'smooth',
             }}>
             <Box sx={{ 
-              display: 'flex', 
-                gap: 3, 
-              transition: 'transform 0.5s ease-in-out',
-                transform: `translateX(-${currentIndex * (100/4)}%)`,
-                width: `${((featuredProducts.length + 7) / 4) * 100}%`, // Add 7 extra products worth of space
-                px: 3,
-              }}>
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(2, 1fr)', // 2 cards per row on mobile
+                sm: 'repeat(3, 1fr)', // 3 cards per row on small tablets
+                md: 'repeat(4, 1fr)', // 4 cards per row on desktop
+                lg: 'repeat(5, 1fr)', // 5 cards per row on large screens
+              },
+              gap: { xs: 2, sm: 3 },
+              px: { xs: 2, sm: 3 },
+            }}>
                 {featuredProducts.map((product) => {
                   console.log('Rendering product:', product); // Debug log
                   return (
-                    <Box key={product.id} sx={{ width: 'calc(100% / 4 - 24px)', minWidth: 280, maxWidth: 320, flexShrink: 0 }}>
+                    <Box key={product.id}>
                 <Card
                   component={Link}
                   to={`/product/${product.id}`}
                   sx={{
                     textDecoration: 'none',
-                          height: 450,
+                    height: { xs: 400, sm: 450 }, // Smaller height on mobile
                     width: '100%',
                     minWidth: 0,
                     maxWidth: '100%',
                     transition: 'all 0.3s ease-in-out',
-                          borderRadius: 3,
+                    borderRadius: 3,
                     overflow: 'hidden',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                          border: '1px solid #f0f0f0',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    border: '1px solid #f0f0f0',
                     display: 'flex',
                     flexDirection: 'column',
-                    flexShrink: 0,
                     '&:hover': {
-                            transform: 'translateY(-6px)',
-                            boxShadow: '0 12px 30px rgba(0,0,0,0.15)',
-                            borderColor: '#ddd',
+                      transform: 'translateY(-6px)',
+                      boxShadow: '0 12px 30px rgba(0,0,0,0.15)',
+                      borderColor: '#ddd',
                     },
                   }}
                 >
                       {/* Product Image with Overlay - Funko Style */}
-                      <Box sx={{ position: 'relative', height: 280, width: '100%', flexShrink: 0 }}>
+                      <Box sx={{ position: 'relative', height: { xs: 240, sm: 280 }, width: '100%' }}>
                     <CardMedia
                       component="img"
                       height="100%"
@@ -676,69 +659,11 @@ const Home = () => {
                           </Box>
                     </Button>
                   </CardContent>
-                                    </Card>
-                  </Box>
+                </Card>
+                </Box>
                 );
               })}
-              
-              {/* Add empty space for scrolling */}
-              {Array.from({ length: 7 }, (_, index) => (
-                <Box 
-                  key={`empty-${index}`} 
-                  sx={{ 
-                    width: 'calc(100% / 4 - 24px)', 
-                    minWidth: 280, 
-                    maxWidth: 320, 
-                    flexShrink: 0,
-                    height: 450,
-                    // Invisible placeholder for spacing
-                  }}
-                />
-              ))}
             </Box>
-            
-            {/* Navigation Arrows */}
-            <IconButton
-              onClick={handlePrev}
-              disabled={!canGoPrev}
-              sx={{
-                position: 'absolute',
-                left: 8,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                bgcolor: canGoPrev ? 'white' : 'rgba(255,255,255,0.5)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                '&:hover': {
-                  bgcolor: canGoPrev ? 'grey.100' : 'rgba(255,255,255,0.5)',
-                },
-                zIndex: 2,
-                display: { xs: 'flex', sm: 'flex' },
-                opacity: canGoPrev ? 1 : 0.5,
-              }}
-            >
-              <ChevronLeft />
-            </IconButton>
-            
-            <IconButton
-              onClick={handleNext}
-              disabled={!canGoNext}
-              sx={{
-                position: 'absolute',
-                right: 8,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                bgcolor: 'white',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                '&:hover': {
-                  bgcolor: 'grey.100',
-                },
-                zIndex: 2,
-                display: 'flex',
-                opacity: canGoNext ? 1 : 0.3,
-              }}
-            >
-              <ChevronRight />
-            </IconButton>
             </Box>
           )}
         </Container>
