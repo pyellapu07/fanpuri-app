@@ -117,8 +117,11 @@ const Navbar = () => {
   const handleAccountMenuClose = () => {
     setAccountMenuAnchor(null);
   };
+  const { clearCart } = useCart();
+  
   const handleLogout = async () => {
     await signOut(auth);
+    clearCart(); // Clear cart when user logs out
     handleAccountMenuClose();
     navigate('/');
   };

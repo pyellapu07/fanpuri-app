@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth } from '../firebase-config';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const CartContext = createContext();
 
@@ -9,10 +11,40 @@ export const CartProvider = ({ children }) => {
     const stored = localStorage.getItem('cart');
     return stored ? JSON.parse(stored) : [];
   });
+  const [currentUser, setCurrentUser] = useState(null);
 
+  // Listen for authentication state changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        setCurrentUser(user);
+        // Load cart for this specific user
+        const userCartKey = `cart_${user.uid}`;
+        const stored = localStorage.getItem(userCartKey);
+        setCart(stored ? JSON.parse(stored) : []);
+      } else {
+        // User is signed out
+        setCurrentUser(null);
+        // Clear cart when user logs out
+        setCart([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Save cart to localStorage whenever cart changes
+  useEffect(() => {
+    if (currentUser) {
+      // Save cart for specific user
+      const userCartKey = `cart_${currentUser.uid}`;
+      localStorage.setItem(userCartKey, JSON.stringify(cart));
+    } else {
+      // Save cart for anonymous users
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
+  }, [cart, currentUser]);
 
   const addToCart = (product) => {
     setCart((prev) => {

@@ -3,11 +3,13 @@ import { Box, Card, CardContent, Typography, Button, Avatar, CircularProgress } 
 import { Google as GoogleIcon } from '@mui/icons-material';
 import { signInWithPopup, signOut } from 'firebase/auth';
 import { auth, provider } from '../firebase-config';
+import { useCart } from '../contexts/CartContext';
 
 const Login = () => {
   const [user, setUser] = useState(() => auth.currentUser);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { clearCart } = useCart();
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -15,6 +17,7 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
+      clearCart(); // Clear any previous cart when user logs in
       console.log('Login successful:', result.user);
     } catch (err) {
       console.error('Login error:', err);
