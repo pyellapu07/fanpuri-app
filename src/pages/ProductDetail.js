@@ -53,15 +53,18 @@ const ProductDetail = () => {
     return () => unsubscribe();
   }, []);
 
-  // Fetch product data from backend
+    // Fetch product data from backend
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         // Add timeout for Render's spin-up delay
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // Reduced timeout
+        
+        console.log('Fetching product with ID:', id);
         
         const response = await fetch(`https://fanpuri-app-1.onrender.com/api/products/${id}`, {
           signal: controller.signal
@@ -70,48 +73,66 @@ const ProductDetail = () => {
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch product: ${response.status}`);
+          if (response.status === 404) {
+            throw new Error(`Product not found: ${response.status}`);
+          } else {
+            throw new Error(`Failed to fetch product: ${response.status}`);
+          }
         }
+        
         const data = await response.json();
+        console.log('Received product data from backend:', data);
+        console.log('Product ID from URL:', id);
+        console.log('Product _id from backend:', data._id);
+        console.log('Product name from backend:', data.name);
+        console.log('Product artist from backend:', data.artist);
         
         // Transform backend data to match frontend format
         const transformedProduct = {
-          id: data.product.id,
-          name: data.product.name || 'Untitled Product',
+          id: data._id || data.id,
+          name: data.name || 'Untitled Product',
           artist: {
-            id: data.product.artist?.id || 1,
-            name: data.product.artist?.name || 'Unknown Artist',
-            avatar: data.product.artist?.avatar || 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=50&h=50&fit=crop',
+            id: data.artist?._id || data.artist?.id || 1,
+            name: data.artist?.name || 'Unknown Artist',
+            avatar: data.artist?.avatar || 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=50&h=50&fit=crop',
           },
-          price: data.product.price,
-          originalPrice: data.product.originalPrice,
-          fandom: data.product.category || 'General',
-          format: data.product.format || 'Print',
-          genre: data.product.genre || 'General',
-          rating: data.product.rating || 4.5,
-          reviews: data.product.reviewCount || 0,
-          description: data.product.description || 'No description available.',
-          longDescription: data.product.longDescription || data.product.description || 'No detailed description available.',
+          price: data.price,
+          originalPrice: data.originalPrice,
+          fandom: data.category || 'General',
+          format: data.printType || 'Print',
+          genre: data.category || 'General',
+          rating: data.rating || 4.5,
+          reviews: data.reviewCount || 0,
+          description: data.description || 'No description available.',
+          longDescription: data.description || 'No detailed description available.',
           specifications: {
-            dimensions: data.product.dimensions || "24\" x 36\" (61cm x 91cm)",
-            material: data.product.material || "Premium matte paper",
-            weight: data.product.weight || "0.2 lbs",
-            printing: data.product.printing || "High-quality digital print",
-            packaging: data.product.packaging || "Rolled in protective tube",
+            dimensions: data.dimensions ? `${data.dimensions.width}${data.dimensions.unit} x ${data.dimensions.height}${data.dimensions.unit}` : "24\" x 36\" (61cm x 91cm)",
+            material: "Premium matte paper",
+            weight: "0.2 lbs",
+            printing: "High-quality digital print",
+            packaging: "Rolled in protective tube",
           },
-          images: data.product.images && data.product.images.length > 0 
-            ? data.product.images.map(img => img.url)
+          images: data.images && data.images.length > 0 
+            ? data.images.map(img => img.url)
             : ["https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop"],
-          inStock: data.product.inStock !== false,
-          stockQuantity: data.product.stockQuantity || 50,
-          isLimited: data.product.isLimited || false,
-          endDate: data.product.endDate,
-          tags: data.product.tags || ["Fan Art", "Limited Edition"],
+          inStock: data.isActive !== false,
+          stockQuantity: data.limitedEditionInfo?.availableCopies || 50,
+          isLimited: data.isLimitedEdition || false,
+          endDate: data.limitedEditionInfo?.endDate,
+          tags: data.tags || ["Fan Art", "Limited Edition"],
         };
         
         setProduct(transformedProduct);
+        console.log('Successfully loaded product from backend:', transformedProduct);
       } catch (err) {
         console.error('Error fetching product:', err);
+        
+        // Check if it's a 404 (product not found) or other error
+        if (err.message.includes('Product not found')) {
+          setError('Product not found. This product may have been removed or the URL is incorrect.');
+          setProduct(null);
+          return;
+        }
         
         // Always use fallback data when API fails
         const fallbackProduct = {
@@ -201,6 +222,27 @@ const ProductDetail = () => {
     window.location.reload();
   };
 
+  const testBackendConnection = async () => {
+    try {
+      console.log('Testing backend connection...');
+      const response = await fetch('https://fanpuri-app-1.onrender.com/api/products/featured');
+      const data = await response.json();
+      console.log('Featured products from backend:', data);
+      
+      if (data && data.products && data.products.length > 0) {
+        console.log('Available product IDs:', data.products.map(p => p.id));
+        // Navigate to the first available product
+        navigate(`/product/${data.products[0].id}`);
+      } else if (data && data.length > 0) {
+        console.log('Available product IDs:', data.map(p => p.id || p._id));
+        // Navigate to the first available product
+        navigate(`/product/${data[0].id || data[0]._id}`);
+      }
+    } catch (error) {
+      console.error('Backend connection test failed:', error);
+    }
+  };
+
   if (loading) {
     return (
       <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
@@ -221,10 +263,13 @@ const ProductDetail = () => {
       <Container maxWidth="xl" sx={{ py: 8 }}>
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="body1" sx={{ mb: 1 }}>
-            Demo Mode: Using sample product data
+            {error.includes('Product not found') ? 'Product Not Found' : 'Demo Mode: Using sample product data'}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            The backend server is currently unavailable. This is a demo product page with sample data.
+            {error.includes('Product not found') 
+              ? 'This product may have been removed or the URL is incorrect.' 
+              : 'The backend server is currently unavailable. This is a demo product page with sample data.'
+            }
           </Typography>
         </Alert>
         <Button
@@ -233,6 +278,13 @@ const ProductDetail = () => {
           sx={{ mr: 2 }}
         >
           Retry
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={testBackendConnection}
+          sx={{ mr: 2 }}
+        >
+          Browse Real Products
         </Button>
         <Button
           variant="contained"
@@ -257,22 +309,22 @@ const ProductDetail = () => {
   return (
     <Box sx={{ bgcolor: 'white', minHeight: '100vh' }}>
       <Container maxWidth="xl" sx={{ py: 0, px: { xs: 2, md: 0 } }}>
-        {/* Breadcrumbs */}
+      {/* Breadcrumbs */}
         <Box sx={{ py: 3, borderBottom: '1px solid #e0e0e0' }}>
           <Breadcrumbs sx={{ fontSize: '0.875rem' }}>
             <Link component={RouterLink} color="inherit" to="/" sx={{ textDecoration: 'none' }}>
-              Home
-            </Link>
+          Home
+        </Link>
             <Link component={RouterLink} color="inherit" to="/shop" sx={{ textDecoration: 'none' }}>
-              Shop
-            </Link>
+          Shop
+        </Link>
             <Link component={RouterLink} color="inherit" to={`/shop?fandom=${product.fandom.toLowerCase()}`} sx={{ textDecoration: 'none' }}>
-              {product.fandom}
-            </Link>
+          {product.fandom}
+        </Link>
             <Typography color="text.primary" sx={{ fontWeight: 500 }}>
               {product.name}
             </Typography>
-          </Breadcrumbs>
+      </Breadcrumbs>
         </Box>
 
         <Grid container spacing={0}>
@@ -281,9 +333,9 @@ const ProductDetail = () => {
             <Box sx={{ position: 'relative' }}>
               {/* Main Product Image */}
               <Box
-                component="img"
+              component="img"
                 src={product.images[selectedImage]}
-                alt={product.name}
+              alt={product.name}
                 sx={{
                   width: '100%',
                   height: { xs: 400, sm: 500, md: 600 },
@@ -314,9 +366,9 @@ const ProductDetail = () => {
                 {product.images.map((image, index) => (
                   <Box
                     key={index}
-                    component="img"
+                  component="img"
                     src={image}
-                    alt={`${product.name} ${index + 1}`}
+                  alt={`${product.name} ${index + 1}`}
                     onClick={() => setSelectedImage(index)}
                     sx={{
                       width: 80,
@@ -333,15 +385,15 @@ const ProductDetail = () => {
                   />
                 ))}
               </Box>
-            </Box>
-          </Grid>
+          </Box>
+        </Grid>
 
           {/* Product Info - Right Side */}
           <Grid xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
-            <Box>
+          <Box>
               {/* Fandom Badge */}
-              <Chip
-                label={product.fandom}
+            <Chip
+              label={product.fandom}
                 sx={{
                   mb: 2,
                   bgcolor: '#000',
@@ -351,9 +403,9 @@ const ProductDetail = () => {
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px',
                 }}
-              />
+            />
 
-              {/* Product Title */}
+            {/* Product Title */}
               <Typography 
                 variant="h3" 
                 component="h1" 
@@ -365,10 +417,10 @@ const ProductDetail = () => {
                   color: '#000',
                 }}
               >
-                {product.name}
-              </Typography>
+              {product.name}
+            </Typography>
 
-              {/* Artist Info */}
+            {/* Artist Info */}
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                 <Box
                   component="img"
@@ -381,12 +433,12 @@ const ProductDetail = () => {
                     objectFit: 'cover',
                   }}
                 />
-                <Box>
+              <Box>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    by{' '}
-                    <Link
-                      component={RouterLink}
-                      to={`/artist/${product.artist.id}`}
+                  by{' '}
+                  <Link
+                    component={RouterLink}
+                    to={`/artist/${product.artist.id}`}
                       sx={{
                         color: '#000',
                         textDecoration: 'none',
@@ -395,14 +447,14 @@ const ProductDetail = () => {
                           textDecoration: 'underline',
                         },
                       }}
-                    >
-                      {product.artist.name}
-                    </Link>
-                  </Typography>
-                </Box>
+                  >
+                    {product.artist.name}
+                  </Link>
+                </Typography>
               </Box>
+            </Box>
 
-              {/* Rating */}
+            {/* Rating */}
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                 <Rating 
                   value={product.rating} 
@@ -411,9 +463,9 @@ const ProductDetail = () => {
                   sx={{ mr: 1 }}
                 />
                 <Typography variant="body2" color="text.secondary">
-                  ({product.reviews} reviews)
-                </Typography>
-              </Box>
+                ({product.reviews} reviews)
+              </Typography>
+            </Box>
 
               {/* Price Section */}
               <Box sx={{ mb: 4 }}>
@@ -439,9 +491,9 @@ const ProductDetail = () => {
                         }}
                       >
                         ₹{product.originalPrice}
-                      </Typography>
-                      <Chip
-                        label={`${calculateDiscount()}% OFF`}
+                  </Typography>
+                  <Chip
+                    label={`${calculateDiscount()}% OFF`}
                         sx={{
                           bgcolor: '#e74c3c',
                           color: 'white',
@@ -457,11 +509,11 @@ const ProductDetail = () => {
                 <Typography variant="body2" color="text.secondary">
                   4 interest-free payments with Afterpay
                 </Typography>
-              </Box>
+            </Box>
 
-              {/* Stock Status */}
+            {/* Stock Status */}
               <Box sx={{ mb: 4 }}>
-                {product.inStock ? (
+              {product.inStock ? (
                   <Typography 
                     variant="body2" 
                     sx={{ 
@@ -471,21 +523,21 @@ const ProductDetail = () => {
                       alignItems: 'center',
                     }}
                   >
-                    ✓ In Stock ({product.stockQuantity} available)
-                  </Typography>
-                ) : (
+                  ✓ In Stock ({product.stockQuantity} available)
+                </Typography>
+              ) : (
                   <Typography variant="body2" color="error.main" fontWeight={600}>
-                    Out of Stock
-                  </Typography>
-                )}
-              </Box>
+                  Out of Stock
+                </Typography>
+              )}
+            </Box>
 
-              {/* Quantity and Add to Cart */}
+            {/* Quantity and Add to Cart */}
               <Box sx={{ mb: 4 }}>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600, minWidth: 80 }}>
-                    Quantity
-                  </Typography>
+                Quantity
+              </Typography>
                   {cartItem ? (
                     <Button
                       variant="contained"
@@ -543,8 +595,8 @@ const ProductDetail = () => {
                   ) : (
                     <>
                       <Select
-                        value={quantity}
-                        onChange={handleQuantityChange}
+                  value={quantity}
+                  onChange={handleQuantityChange}
                         size="small"
                         sx={{
                           minWidth: 80,
@@ -562,11 +614,11 @@ const ProductDetail = () => {
                           </MenuItem>
                         ))}
                       </Select>
-                      <Button
-                        variant="contained"
+                <Button
+                  variant="contained"
                         fullWidth
-                        onClick={handleAddToCart}
-                        disabled={!product.inStock}
+                  onClick={handleAddToCart}
+                  disabled={!product.inStock}
                         sx={{
                           bgcolor: '#F3F3F7',
                           color: 'black',
@@ -581,9 +633,9 @@ const ProductDetail = () => {
                             bgcolor: '#e0e0e0',
                           },
                         }}
-                      >
-                        Add to Cart
-                      </Button>
+                >
+                  Add to Cart
+                </Button>
                     </>
                   )}
                 </Box>
@@ -594,7 +646,7 @@ const ProductDetail = () => {
                 <Typography variant="body2" sx={{ fontWeight: 600, color: '#e74c3c' }}>
                   THIS ITEM IS FINAL SALE.
                 </Typography>
-              </Box>
+            </Box>
 
               {/* Gift Box Option */}
               <Box sx={{ mb: 4 }}>
@@ -603,7 +655,7 @@ const ProductDetail = () => {
                   <label htmlFor="giftBox">
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       Gift Box (₹3.50)
-                    </Typography>
+              </Typography>
                   </label>
                 </Box>
               </Box>
@@ -613,37 +665,37 @@ const ProductDetail = () => {
                 <Typography variant="body1" sx={{ lineHeight: 1.6, color: '#333' }}>
                   {product.description}
                 </Typography>
-              </Box>
+            </Box>
 
-              {/* Shipping Info */}
+            {/* Shipping Info */}
               <Card sx={{ p: 3, bgcolor: '#f8f9fa', borderRadius: '8px' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
-                  Shipping & Returns
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                Shipping & Returns
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <LocalShipping sx={{ mr: 1, fontSize: 20, color: '#666' }} />
                   <Typography variant="body2" color="text.secondary">
                     Free shipping on orders over ₹500
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <Security sx={{ mr: 1, fontSize: 20, color: '#666' }} />
                   <Typography variant="body2" color="text.secondary">
-                    Secure payment processing
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  Secure payment processing
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Refresh sx={{ mr: 1, fontSize: 20, color: '#666' }} />
                   <Typography variant="body2" color="text.secondary">
-                    30-day return policy
-                  </Typography>
-                </Box>
-              </Card>
-            </Box>
-          </Grid>
+                  30-day return policy
+                </Typography>
+              </Box>
+            </Card>
+          </Box>
         </Grid>
+      </Grid>
       </Container>
-    </Box>
+      </Box>
   );
 };
 
