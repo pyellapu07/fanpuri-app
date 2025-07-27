@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server-firebase.js",
+    "build": "npm install",
     "dev": "nodemon server-firebase.js",
     "simple": "node server-simple.js",
     "dev-simple": "nodemon server-simple.js",
