@@ -458,20 +458,41 @@ const Navbar = () => {
           display: { md: 'none' },
           '& .MuiDrawer-paper': {
             width: 280,
-            backgroundColor: 'primary.main',
-            color: 'white',
+            backgroundColor: 'white',
+            color: 'black',
           },
         }}
       >
         <Box sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
-            Menu
-          </Typography>
+          {/* Logo and Close Button */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box
+              component="img"
+              src="/assets/FANPURI%20logo.png"
+              alt="FANPURI"
+              sx={{
+                height: '80px',
+                width: 'auto',
+                objectFit: 'contain',
+              }}
+            />
+            <IconButton
+              onClick={handleMobileMenuClose}
+              sx={{ 
+                color: 'black',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                }
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
           
           {/* Mobile Search */}
-          <Search sx={{ mb: 2, display: 'block' }}>
+          <Search sx={{ mb: 2, display: 'block', bgcolor: 'rgba(0,0,0,0.1)' }}>
             <SearchIconWrapper>
-              <SearchIcon />
+              <SearchIcon sx={{ color: 'black' }} />
             </SearchIconWrapper>
             <form onSubmit={handleSearch}>
               <StyledInputBase
@@ -479,11 +500,12 @@ const Navbar = () => {
                 inputProps={{ 'aria-label': 'search' }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{ color: 'black' }}
               />
             </form>
           </Search>
 
-          <Divider sx={{ backgroundColor: 'rgba(255,255,255,0.2)', mb: 2 }} />
+          <Divider sx={{ backgroundColor: 'rgba(0,0,0,0.2)', mb: 2 }} />
           
           <List>
             <ListItem 
@@ -494,10 +516,14 @@ const Navbar = () => {
               sx={{ 
                 textTransform: 'uppercase',
                 fontWeight: 600,
-                fontSize: '1rem'
+                fontSize: '1rem',
+                color: 'black',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                }
               }}
             >
-              <ListItemText primary="Shop" />
+              <ListItemText primary="Shop" sx={{ color: 'black' }} />
             </ListItem>
             <ListItem 
               button 
@@ -507,10 +533,14 @@ const Navbar = () => {
               sx={{ 
                 textTransform: 'uppercase',
                 fontWeight: 600,
-                fontSize: '1rem'
+                fontSize: '1rem',
+                color: 'black',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                }
               }}
             >
-              <ListItemText primary="Artists" />
+              <ListItemText primary="Artists" sx={{ color: 'black' }} />
             </ListItem>
             <ListItem 
               button 
@@ -520,10 +550,14 @@ const Navbar = () => {
               sx={{ 
                 textTransform: 'uppercase',
                 fontWeight: 600,
-                fontSize: '1rem'
+                fontSize: '1rem',
+                color: 'black',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                }
               }}
             >
-              <ListItemText primary="Limited Drops" />
+              <ListItemText primary="Limited Drops" sx={{ color: 'black' }} />
             </ListItem>
             <ListItem 
               button 
@@ -533,14 +567,18 @@ const Navbar = () => {
               sx={{ 
                 textTransform: 'uppercase',
                 fontWeight: 600,
-                fontSize: '1rem'
+                fontSize: '1rem',
+                color: 'black',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                }
               }}
             >
-              <ListItemText primary="FanHub" />
+              <ListItemText primary="FanHub" sx={{ color: 'black' }} />
             </ListItem>
           </List>
 
-          <Divider sx={{ backgroundColor: 'rgba(255,255,255,0.2)', my: 2 }} />
+          <Divider sx={{ backgroundColor: 'rgba(0,0,0,0.2)', my: 2 }} />
           
           <List>
             <ListItem 
@@ -548,24 +586,42 @@ const Navbar = () => {
               component={Link} 
               to="/profile" 
               onClick={handleMobileMenuClose}
+              sx={{ 
+                color: 'black',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                }
+              }}
             >
-              <ListItemText primary="My Profile" />
+              <ListItemText primary="My Profile" sx={{ color: 'black' }} />
             </ListItem>
             <ListItem 
               button 
               component={Link} 
               to="/orders" 
               onClick={handleMobileMenuClose}
+              sx={{ 
+                color: 'black',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                }
+              }}
             >
-              <ListItemText primary="My Orders" />
+              <ListItemText primary="My Orders" sx={{ color: 'black' }} />
             </ListItem>
             <ListItem 
               button 
               component={Link} 
               to="/submit" 
               onClick={handleMobileMenuClose}
+              sx={{ 
+                color: 'black',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                }
+              }}
             >
-              <ListItemText primary="Submit Work" />
+              <ListItemText primary="Submit Work" sx={{ color: 'black' }} />
             </ListItem>
           </List>
         </Box>

@@ -358,31 +358,16 @@ const Home = () => {
       </Box>
 
       {/* Featured Products - Funko Style */}
-      <Box sx={{ bgcolor: 'white', py: 8 }}>
+      <Box sx={{ bgcolor: 'white', py: 4 }}>
         <Container maxWidth="xl" sx={{ px: 0 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 6, px: 3 }}>
-            <Typography variant="h3" component="h2" sx={{ fontSize: '2rem', fontWeight: 700, color: '#000' }}>
+          <Box sx={{ textAlign: 'left', mb: 4, px: 3 }}>
+            <Typography variant="h3" component="h2" sx={{ fontSize: '1.2rem', fontWeight: 700, color: '#000' }}>
             Featured Products
           </Typography>
-          <Button
-            component={Link}
-            to="/shop"
-            variant="outlined"
-              size="large"
-            endIcon={<ArrowForward />}
-              sx={{
-                borderColor: '#000',
-                color: '#000',
-                fontWeight: 600,
-                '&:hover': {
-                  borderColor: '#333',
-                  backgroundColor: '#f5f5f5',
-                }
-              }}
-          >
-            View All
-          </Button>
-        </Box>
+            <Typography sx={{ fontSize: '0.7rem', color: '#666', fontWeight: 700, mt: 1 }}>
+              {featuredProducts.length} Results
+            </Typography>
+          </Box>
           
           {loading && (
             <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -406,7 +391,7 @@ const Home = () => {
           {!loading && !error && featuredProducts.length === 0 && (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <Typography>No featured products available. Upload some products through the admin panel!</Typography>
-            </Box>
+        </Box>
           )}
           
                     {!loading && !error && featuredProducts.length > 0 && (
@@ -422,8 +407,8 @@ const Home = () => {
                 md: 'repeat(4, 1fr)', // 4 cards per row on desktop
                 lg: 'repeat(5, 1fr)', // 5 cards per row on large screens
               },
-              gap: { xs: 2, sm: 3 },
-              px: { xs: 2, sm: 3 },
+              gap: { xs: 1.5, sm: 2, md: 3 }, // Tighter spacing like Funko
+              px: { xs: 1, sm: 2, md: 3 }, // Less padding on mobile
             }}>
                 {featuredProducts.map((product) => {
                   console.log('Rendering product:', product); // Debug log
@@ -434,26 +419,27 @@ const Home = () => {
                   to={`/product/${product.id}`}
                   sx={{
                     textDecoration: 'none',
-                    height: { xs: 400, sm: 450 }, // Smaller height on mobile
+                    height: { xs: 420, sm: 460 }, // Increased height to fit 2 lines
                     width: '100%',
                     minWidth: 0,
                     maxWidth: '100%',
                     transition: 'all 0.3s ease-in-out',
-                    borderRadius: 3,
+                    borderRadius: 2, // Smaller radius like Funko
                     overflow: 'hidden',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                    border: '1px solid #f0f0f0',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)', // Lighter shadow
+                    border: '1px solid #e0e0e0',
                     display: 'flex',
                     flexDirection: 'column',
+                    bgcolor: 'white',
                     '&:hover': {
-                      transform: 'translateY(-6px)',
-                      boxShadow: '0 12px 30px rgba(0,0,0,0.15)',
-                      borderColor: '#ddd',
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+                      borderColor: '#ccc',
                     },
                   }}
                 >
-                      {/* Product Image with Overlay - Funko Style */}
-                      <Box sx={{ position: 'relative', height: { xs: 240, sm: 280 }, width: '100%' }}>
+                      {/* Product Image - Funko Style */}
+                      <Box sx={{ position: 'relative', height: { xs: 220, sm: 260 }, width: '100%' }}>
                     <CardMedia
                       component="img"
                       height="100%"
@@ -508,24 +494,30 @@ const Home = () => {
                   
                       {/* Product Details - Funko Style */}
                       <CardContent sx={{ 
-                        p: 2, 
+                        p: { xs: 1.5, sm: 2 }, // Tighter padding on mobile
                         pb: 1, 
                         flexGrow: 1, 
                         display: 'flex', 
                         flexDirection: 'column', 
-                        height: 150, 
+                        height: { xs: 180, sm: 200 }, // Increased height to accommodate larger text container
                         textAlign: 'left',
                         justifyContent: 'space-between'
                       }}>
 
                         {/* Text Content Container */}
-                        <Box sx={{ flexGrow: 1 }}>
+                        <Box sx={{ 
+                          flexGrow: 1,
+                          height: { xs: 120, sm: 140 }, // Increased height to fit 2 lines properly
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between'
+                        }}>
                           {/* Artist Name - Above Title in CAPS */}
                     <Typography 
                       variant="caption" 
                       color="text.secondary" 
                       sx={{ 
-                              fontSize: '0.75rem',
+                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
                               mb: 0.25,
                               textAlign: 'left',
                               textTransform: 'uppercase',
@@ -543,10 +535,10 @@ const Home = () => {
                       component="h3" 
                       sx={{ 
                               fontWeight: 700,
-                              fontSize: '1.1rem',
+                              fontSize: { xs: '1rem', sm: '1.1rem' },
                               lineHeight: 1.3,
                               mb: 0.25,
-                              minHeight: 35,
+                              flexGrow: 1, // Take available space in fixed container
                         overflow: 'hidden',
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
