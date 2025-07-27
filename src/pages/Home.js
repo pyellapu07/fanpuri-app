@@ -48,7 +48,7 @@ const Home = () => {
             artist: product.artist?.name || product.artistName || 'Unknown Artist',
             price: product.price,
             originalPrice: product.originalPrice,
-            image: product.images && product.images.length > 0 ? `https://fanpuri-app-1.onrender.com${product.images[0].url}` : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop',
+            image: product.images && product.images.length > 0 ? product.images[0].url : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop',
             fandom: product.category,
             rating: product.rating || 4.5,
             reviews: product.reviewCount || 0,
