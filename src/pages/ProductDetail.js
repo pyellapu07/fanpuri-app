@@ -113,14 +113,8 @@ const ProductDetail = () => {
       } catch (err) {
         console.error('Error fetching product:', err);
         
-        if (err.name === 'AbortError') {
-          setError('Server is starting up... Please wait a moment and refresh the page.');
-        } else {
-          setError(`Failed to load product: ${err.message}. The server might be starting up.`);
-        }
-        
-        // Fallback to mock data
-        setProduct({
+        // Always use fallback data when API fails
+        const fallbackProduct = {
           id: parseInt(id),
           name: "Spider-Man: No Way Home Poster",
           artist: {
@@ -154,7 +148,11 @@ const ProductDetail = () => {
           isLimited: false,
           endDate: null,
           tags: ["Spider-Man", "Marvel", "Poster", "No Way Home", "Superhero"],
-        });
+        };
+        
+        setProduct(fallbackProduct);
+        setError(null); // Clear any previous errors
+        console.log('Using fallback product data:', fallbackProduct);
       } finally {
         setLoading(false);
       }
@@ -196,6 +194,13 @@ const ProductDetail = () => {
     return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
   };
 
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    // Re-fetch the product data
+    window.location.reload();
+  };
+
   if (loading) {
     return (
       <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
@@ -214,12 +219,17 @@ const ProductDetail = () => {
   if (error) {
     return (
       <Container maxWidth="xl" sx={{ py: 8 }}>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            Demo Mode: Using sample product data
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            The backend server is currently unavailable. This is a demo product page with sample data.
+          </Typography>
         </Alert>
         <Button
           variant="outlined"
-          onClick={() => window.location.reload()}
+          onClick={handleRetry}
           sx={{ mr: 2 }}
         >
           Retry
