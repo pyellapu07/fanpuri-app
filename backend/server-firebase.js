@@ -18,22 +18,9 @@ const uploadsPath = path.join(__dirname, 'uploads');
 console.log('Uploads directory path:', uploadsPath);
 app.use('/uploads', express.static(uploadsPath));
 
-// Configure multer for local storage
+// Configure multer for memory storage (we'll upload to Firebase Storage)
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      const uploadDir = path.join(__dirname, 'uploads');
-      // Create uploads directory if it doesn't exist
-      if (!require('fs').existsSync(uploadDir)) {
-        require('fs').mkdirSync(uploadDir, { recursive: true });
-      }
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-      const uniqueName = `${uuidv4()}-${file.originalname}`;
-      cb(null, uniqueName);
-    }
-  }),
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
@@ -46,22 +33,43 @@ const upload = multer({
   },
 });
 
-// Helper function to handle local image upload
-async function handleLocalImageUpload(file) {
+// Helper function to upload image to Firebase Storage
+async function uploadImageToFirebase(file, folder = 'products') {
   try {
-    console.log('Processing local image:', file.originalname);
+    console.log('Uploading image to Firebase:', file.originalname);
+    const fileName = `${folder}/${uuidv4()}-${file.originalname}`;
+    const fileUpload = bucket.file(fileName);
     
-    // File is already saved by multer, just return the info
-    const imageData = {
-      id: uuidv4(),
-      filename: file.filename,
-      url: `/uploads/${file.filename}`, // Local URL
-      uploadedAt: new Date().toISOString(),
-    };
-    
-    return imageData;
+    const blobStream = fileUpload.createWriteStream({
+      metadata: {
+        contentType: file.mimetype,
+      },
+    });
+
+    return new Promise((resolve, reject) => {
+      blobStream.on('error', (error) => {
+        reject(error);
+      });
+
+      blobStream.on('finish', async () => {
+        // Make the file public
+        await fileUpload.makePublic();
+        
+        // Get the public URL
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+        
+        resolve({
+          id: uuidv4(),
+          filename: fileName,
+          url: publicUrl,
+          uploadedAt: new Date().toISOString(),
+        });
+      });
+
+      blobStream.end(file.buffer);
+    });
   } catch (error) {
-    throw new Error('Error processing local image');
+    throw new Error('Error uploading image to Firebase Storage');
   }
 }
 
@@ -221,11 +229,11 @@ app.post('/api/upload/product', upload.array('images', 5), async (req, res) => {
       artist = { id: artistDoc.id, ...artistDoc.data() };
     }
 
-    // Process uploaded images
+    // Upload images to Firebase Storage
     let images = [];
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
-        const imageData = await handleLocalImageUpload(file);
+        const imageData = await uploadImageToFirebase(file, 'products');
         images.push(imageData);
       }
     }
