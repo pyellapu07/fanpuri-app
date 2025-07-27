@@ -3,7 +3,15 @@ const multer = require('multer');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
-const { db, bucket } = require('./firebase-config');
+const cloudinary = require('cloudinary').v2;
+const { db } = require('./firebase-config');
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: 'dnucc51q2',
+  api_key: '522532423431467',
+  api_secret: 'bPrdPluecGzcPwGt_PLso_-jTKA'
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,43 +41,31 @@ const upload = multer({
   },
 });
 
-// Helper function to upload image to Firebase Storage
-async function uploadImageToFirebase(file, folder = 'products') {
+// Helper function to upload image to Cloudinary
+async function uploadImageToCloudinary(file, folder = 'products') {
   try {
-    console.log('Uploading image to Firebase:', file.originalname);
-    const fileName = `${folder}/${uuidv4()}-${file.originalname}`;
-    const fileUpload = bucket.file(fileName);
+    console.log('Uploading image to Cloudinary:', file.originalname);
     
-    const blobStream = fileUpload.createWriteStream({
-      metadata: {
-        contentType: file.mimetype,
-      },
+    // Convert buffer to base64
+    const b64 = Buffer.from(file.buffer).toString('base64');
+    const dataURI = `data:${file.mimetype};base64,${b64}`;
+    
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(dataURI, {
+      folder: folder,
+      public_id: `${uuidv4()}-${file.originalname}`,
+      resource_type: 'auto'
     });
-
-    return new Promise((resolve, reject) => {
-      blobStream.on('error', (error) => {
-        reject(error);
-      });
-
-      blobStream.on('finish', async () => {
-        // Make the file public
-        await fileUpload.makePublic();
-        
-        // Get the public URL
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-        
-        resolve({
-          id: uuidv4(),
-          filename: fileName,
-          url: publicUrl,
-          uploadedAt: new Date().toISOString(),
-        });
-      });
-
-      blobStream.end(file.buffer);
-    });
+    
+    return {
+      id: uuidv4(),
+      filename: result.public_id,
+      url: result.secure_url,
+      uploadedAt: new Date().toISOString(),
+    };
   } catch (error) {
-    throw new Error('Error uploading image to Firebase Storage');
+    console.error('Cloudinary upload error:', error);
+    throw new Error('Error uploading image to Cloudinary');
   }
 }
 
@@ -229,11 +225,11 @@ app.post('/api/upload/product', upload.array('images', 5), async (req, res) => {
       artist = { id: artistDoc.id, ...artistDoc.data() };
     }
 
-    // Upload images to Firebase Storage
+    // Upload images to Cloudinary
     let images = [];
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
-        const imageData = await uploadImageToFirebase(file, 'products');
+        const imageData = await uploadImageToCloudinary(file, 'products');
         images.push(imageData);
       }
     }
