@@ -15,8 +15,18 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
+      console.log('Login successful:', result.user);
     } catch (err) {
-      setError('Login failed. Please try again.');
+      console.error('Login error:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Login was cancelled. Please try again.');
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('Popup was blocked. Please allow popups and try again.');
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized. Please contact support.');
+      } else {
+        setError(`Login failed: ${err.message}`);
+      }
     } finally {
       setLoading(false);
     }
