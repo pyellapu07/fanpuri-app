@@ -107,12 +107,10 @@ const Navbar = () => {
         zIndex: 1000,
       }}
     >
-      {/* Video Background */}
+      {/* GIF Background */}
       <Box
-        component="video"
-        autoPlay
-        muted
-        loop
+        component="img"
+        src="/assets/5726_Dust_Particles_1920x1080-ezgif.com-video-to-gif-converter.gif"
         sx={{
           position: 'absolute',
           top: 0,
@@ -122,9 +120,7 @@ const Navbar = () => {
           objectFit: 'cover',
           zIndex: -2,
         }}
-      >
-        <source src="/assets/5726_Dust_Particles_1920x1080.mp4" type="video/mp4" />
-      </Box>
+      />
       {/* Overlay */}
       <Box
         sx={{
