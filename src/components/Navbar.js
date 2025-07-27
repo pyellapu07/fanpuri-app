@@ -28,6 +28,9 @@ import {
 } from '@mui/icons-material';
 import { styled, alpha } from '@mui/material/styles';
 import { Link, useNavigate } from 'react-router-dom';
+import { auth } from '../firebase-config';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { useCart } from '../contexts/CartContext';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -74,6 +77,16 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showPromoBanner, setShowPromoBanner] = useState(true);
+  const [user, setUser] = useState(null);
+  const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
+  const { cart } = useCart();
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -96,6 +109,18 @@ const Navbar = () => {
     if (searchQuery.trim()) {
       navigate(`/shop?search=${encodeURIComponent(searchQuery)}`);
     }
+  };
+
+  const handleAccountMenuOpen = (event) => {
+    setAccountMenuAnchor(event.currentTarget);
+  };
+  const handleAccountMenuClose = () => {
+    setAccountMenuAnchor(null);
+  };
+  const handleLogout = async () => {
+    await signOut(auth);
+    handleAccountMenuClose();
+    navigate('/');
   };
 
   return (
@@ -264,33 +289,80 @@ const Navbar = () => {
 
           {/* Right side icons */}
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
-            <Button
-              color="inherit"
-              onClick={handleMenuOpen}
-              endIcon={<ExpandMoreIcon />}
-              startIcon={<PersonIcon />}
+           {user ? (
+             <>
+                           <Button
+                 onClick={handleAccountMenuOpen}
+                 sx={{ 
+                   bgcolor: '#000',
+                   color: '#fff',
+                   borderRadius: '50px',
+                   px: 2.5,
+                   py: 0.8,
+                   fontWeight: 600,
+                   fontSize: '0.85rem',
+                   textTransform: 'uppercase',
+                   boxShadow: 'none',
+                   mr: 2,
+                   minHeight: '32px',
+                   '&:hover': {
+                     bgcolor: '#222',
+                     color: '#fff',
+                     boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                   },
+                   display: { xs: 'none', sm: 'flex' },
+                 }}
+              endIcon={<ExpandMoreIcon sx={{ fontSize: '1rem' }} />}
+               >
+                 {user.displayName ? user.displayName.split(' ')[0] : 'Account'}
+               </Button>
+               <Menu
+                 anchorEl={accountMenuAnchor}
+                 open={Boolean(accountMenuAnchor)}
+                 onClose={handleAccountMenuClose}
+                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+               >
+                 <MenuItem onClick={() => { handleAccountMenuClose(); navigate('/profile'); }}>Profile</MenuItem>
+                 <MenuItem onClick={() => { handleAccountMenuClose(); navigate('/orders'); }}>Orders</MenuItem>
+                 <MenuItem onClick={() => { handleAccountMenuClose(); navigate('/settings'); }}>Settings</MenuItem>
+                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
+               </Menu>
+             </>
+           ) : (
+             <Button
+               component={Link}
+               to="/login"
               sx={{ 
-                display: { xs: 'none', sm: 'flex' },
+                 bgcolor: '#000',
+                 color: '#fff',
+                 borderRadius: '50px',
+                 px: 2.5,
+                 py: 0.8,
+                 fontWeight: 600,
+                 fontSize: '0.85rem',
                 textTransform: 'uppercase',
-                fontWeight: 600,
-                fontSize: '0.875rem',
+                 boxShadow: 'none',
                 mr: 2,
+                minHeight: '32px',
                 '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  transform: 'translateY(-1px)',
-                  transition: 'all 0.2s ease-in-out',
-                }
+                   bgcolor: '#222',
+                   color: '#fff',
+                   boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                 },
+                 display: { xs: 'none', sm: 'flex' },
               }}
             >
-              Account
+               Login
             </Button>
+           )}
             
             <IconButton
               component={Link}
               to="/cart"
               color="inherit"
             >
-              <Badge badgeContent={3} color="secondary">
+              <Badge badgeContent={cart.reduce((sum, item) => sum + item.quantity, 0)} color="secondary">
                 <CartIcon />
               </Badge>
             </IconButton>
@@ -364,7 +436,7 @@ const Navbar = () => {
               color="inherit"
               sx={{ color: 'white', position: 'relative', p: 1 }}
             >
-              <Badge badgeContent={3} color="primary">
+              <Badge badgeContent={cart.reduce((sum, item) => sum + item.quantity, 0)} color="primary">
                 <CartIcon sx={{ fontSize: '28px' }} />
               </Badge>
             </IconButton>
@@ -575,6 +647,23 @@ const Navbar = () => {
               }}
             >
               <ListItemText primary="FanHub" sx={{ color: 'black' }} />
+            </ListItem>
+            <ListItem 
+              button 
+              component={Link} 
+              to="/login" 
+              onClick={handleMobileMenuClose}
+              sx={{ 
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                fontSize: '1rem',
+                color: 'black',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                }
+              }}
+            >
+              <ListItemText primary="Login" sx={{ color: 'black' }} />
             </ListItem>
           </List>
 

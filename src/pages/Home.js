@@ -12,6 +12,8 @@ import {
   Chip,
   IconButton,
   CircularProgress,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   ArrowForward,
@@ -20,13 +22,35 @@ import {
   Favorite,
   LocalOffer,
 } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCart } from '../contexts/CartContext';
+import { auth } from '../firebase-config';
+import { onAuthStateChanged } from 'firebase/auth';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 const Home = () => {
   // State for featured products
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { cart, addToCart, updateQuantity } = useCart();
+  const [user, setUser] = useState(null);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const [addedProduct, setAddedProduct] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Fetch featured products from backend
   useEffect(() => {
@@ -121,6 +145,7 @@ const Home = () => {
     { name: 'Harry Potter', color: '#2ecc71', icon: '🧙‍♂️' },
   ];
 
+  const getCartItem = (productId) => cart.find((item) => item.id === productId);
 
 
   return (
@@ -411,7 +436,7 @@ const Home = () => {
               px: { xs: 1, sm: 2, md: 3 }, // Less padding on mobile
             }}>
                 {featuredProducts.map((product) => {
-                  console.log('Rendering product:', product); // Debug log
+                  const cartItem = cart.find((item) => item.id === product.id);
                   return (
                     <Box key={product.id}>
                 <Card
@@ -579,84 +604,274 @@ const Home = () => {
                             )}
                           </Box>
                         </Box>
-                    <Button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        // Add to cart functionality here
-                        console.log('Added to cart:', product.name);
-                      }}
-                      variant="contained"
-                      fullWidth
-                          size="large"
-                      sx={{
-                            bgcolor: '#F3F3F7',
-                            color: 'black',
-                        textTransform: 'uppercase',
-                            fontSize: '0.8rem',
-                        fontWeight: 600,
-                            py: 1.2,
+                    {cartItem ? (
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        sx={{
+                          bgcolor: '#000',
+                          color: '#fff',
+                          borderRadius: '50px',
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          py: 1.2,
+                          textTransform: 'uppercase',
+                          boxShadow: 'none',
+                          letterSpacing: '0.5px',
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          px: 2,
+                        }}
+                      >
+                        <span>IN CART</span>
+                        <Select
+                          value={cartItem.quantity}
+                          onChange={e => { 
+                            e.preventDefault(); 
+                            e.stopPropagation(); 
+                            updateQuantity(product.id, Number(e.target.value)); 
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.2)',
                             borderRadius: '50px',
-                            letterSpacing: '0.5px',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            boxShadow: 'none',
-                        '&:hover': {
-                              transform: 'translateY(-1px)',
+                            fontWeight: 700,
+                            minWidth: 40,
+                            fontSize: '0.8rem',
+                            color: 'white',
+                            '& .MuiSelect-select': { 
+                              textAlign: 'center', 
+                              py: 0.5,
                               color: 'white',
-                              '& .gif-overlay': {
-                                opacity: 1,
-                              },
+                              pr: 1,
                             },
-                            transition: 'all 0.3s ease',
-                            display: 'block',
-                            flexShrink: 0,
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              border: 'none',
+                            },
+                            '& .MuiSvgIcon-root': {
+                              color: 'white',
+                            },
                           }}
                         >
-                          {/* GIF Overlay for Hover Effect */}
+                          {[...Array(12)].map((_, i) => (
+                            <MenuItem 
+                              key={i + 1} 
+                              value={i + 1} 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                              sx={{ fontSize: '0.8rem' }}
+                            >
+                              {i + 1}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (!user) {
+                            setLoginDialogOpen(true);
+                          } else {
+                            addToCart(product);
+                            setTimeout(() => setAddedProduct(product), 0);
+                          }
+                        }}
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        sx={{
+                          bgcolor: '#F3F3F7',
+                          color: 'black',
+                          textTransform: 'uppercase',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          py: 1.2,
+                          borderRadius: '50px',
+                          letterSpacing: '0.5px',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          boxShadow: 'none',
+                          '&:hover': {
+                            transform: 'translateY(-1px)',
+                            color: 'white',
+                            '& .gif-overlay': {
+                              opacity: 1,
+                            },
+                          },
+                          transition: 'all 0.3s ease',
+                          display: 'block',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {/* GIF Overlay for Hover Effect */}
+                        <Box
+                          className="gif-overlay"
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            opacity: 0,
+                            transition: 'opacity 0.3s ease',
+                            zIndex: 1,
+                          }}
+                        >
                           <Box
-                            className="gif-overlay"
+                            component="img"
+                            src="/assets/Add to cart animation.gif"
                             sx={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
                               width: '100%',
                               height: '100%',
-                              opacity: 0,
-                              transition: 'opacity 0.3s ease',
-                              zIndex: 1,
+                              objectFit: 'cover',
+                              borderRadius: '50px',
                             }}
-                          >
-                            <Box
-                              component="img"
-                              src="/assets/Add to cart animation.gif"
-                              sx={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                borderRadius: '50px',
-                              }}
-                              onMouseEnter={(e) => {
-                                // Restart GIF animation by reloading the image
-                                const img = e.target;
-                                const src = img.src;
-                                img.src = '';
-                                img.src = src;
-                              }}
-                            />
-                          </Box>
-                          
-                          {/* Button Text */}
-                          <Box sx={{ position: 'relative', zIndex: 2 }}>
-                      Add to Cart
-                          </Box>
-                    </Button>
+                            onMouseEnter={(e) => {
+                              // Restart GIF animation by reloading the image
+                              const img = e.target;
+                              const src = img.src;
+                              img.src = '';
+                              img.src = src;
+                            }}
+                          />
+                        </Box>
+                        {/* Button Text */}
+                        <Box sx={{ position: 'relative', zIndex: 2 }}>
+                          Add to Cart
+                        </Box>
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
                 </Box>
                 );
               })}
             </Box>
+            {/* Login/Signup Dialog */}
+            <Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
+              <DialogTitle>Login Required</DialogTitle>
+              <DialogContent>
+                Please login or sign up to add items to your cart.
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setLoginDialogOpen(false)} color="secondary">Cancel</Button>
+                <Button onClick={() => { setLoginDialogOpen(false); window.location.href = '/login'; }} color="primary" variant="contained">Login / Signup</Button>
+              </DialogActions>
+            </Dialog>
+            {/* Add to Cart Confirmation Modal */}
+            <Dialog open={!!addedProduct} onClose={() => setAddedProduct(null)} maxWidth="xs" fullWidth
+              PaperProps={{
+                sx: {
+                  borderRadius: '16px',
+                  p: 0,
+                  overflow: 'visible',
+                  minWidth: { xs: '90vw', sm: 500 },
+                  maxWidth: { xs: '90vw', sm: 600 },
+                  mx: { xs: 2, sm: 'auto' },
+                }
+              }}
+            >
+              <DialogTitle sx={{ fontWeight: 700, textAlign: 'left', pb: 0, pl: 3, pr: 5, pt: 3, fontSize: '1.05rem' }}>
+                ITEM(S) ADDED TO CART
+                <IconButton
+                  aria-label="close"
+                  onClick={() => setAddedProduct(null)}
+                  sx={{ position: 'absolute', right: 16, top: 16 }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              {addedProduct && (
+                <DialogContent sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'center', sm: 'stretch' }, pt: 2, pb: 3, pl: 3, pr: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-end', mr: { xs: 0, sm: 4 }, mb: { xs: 2, sm: 0 } }}>
+                    <Box component="img" src={addedProduct.image} alt={addedProduct.name} sx={{ width: { xs: 120, sm: 180 }, height: { xs: 120, sm: 180 }, objectFit: 'contain', borderRadius: 3 }} />
+                  </Box>
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: { xs: 'center', sm: 'left' } }}>
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5, fontSize: '0.98rem' }}>
+                      {addedProduct.fandom || addedProduct.category}
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, fontSize: '1rem', lineHeight: 1.2 }}>
+                      {addedProduct.name}
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, fontSize: '0.98rem' }}>
+                      ₹{addedProduct.price}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.92rem' }}>
+                      Quantity: 1
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { xs: 'center', sm: 'flex-start' }, gap: 1 }}>
+                      <Button
+                        variant="contained"
+                        sx={{
+                          bgcolor: '#000',
+                          color: '#fff',
+                          borderRadius: '999px',
+                          fontWeight: 700,
+                          py: 1,
+                          fontSize: '0.98rem',
+                          minHeight: 36,
+                          maxWidth: 260,
+                          width: '100%',
+                          boxShadow: 'none',
+                          transition: 'box-shadow 0.2s, background 0.2s, color 0.2s',
+                          '&:hover': {
+                            bgcolor: 'transparent',
+                            color: '#000',
+                            boxShadow: 'inset 0 0 0 2px #000',
+                          },
+                        }}
+                        onClick={() => { setAddedProduct(null); navigate('/cart'); }}
+                      >
+                        VIEW CART
+                      </Button>
+                      <Button
+                        variant="contained"
+                        sx={{
+                          bgcolor: '#F3F3F7',
+                          color: '#000',
+                          borderRadius: '999px',
+                          fontWeight: 700,
+                          py: 1,
+                          fontSize: '0.98rem',
+                          minHeight: 36,
+                          maxWidth: 260,
+                          width: '100%',
+                          boxShadow: 'none',
+                          transition: 'box-shadow 0.2s, background 0.2s, color 0.2s',
+                          '&:hover': {
+                            bgcolor: 'transparent',
+                            color: '#000',
+                            boxShadow: 'inset 0 0 0 2px #000',
+                          },
+                        }}
+                        onClick={() => setAddedProduct(null)}
+                      >
+                        CONTINUE SHOPPING
+                      </Button>
+                    </Box>
+                  </Box>
+                </DialogContent>
+              )}
+            </Dialog>
             </Box>
           )}
         </Container>

@@ -17,6 +17,9 @@ import LimitedDrops from './pages/LimitedDrops';
 import SubmitWork from './pages/SubmitWork';
 import ArtistProfile from './pages/ArtistProfile';
 import ProductDetail from './pages/ProductDetail';
+import Login from './pages/Login';
+import Cart from './pages/Cart';
+import { CartProvider } from './contexts/CartContext';
 
 // Create theme
 const theme = createTheme({
@@ -49,6 +52,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <CartProvider>
       <Router>
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           <Navbar />
@@ -62,11 +66,14 @@ function App() {
               <Route path="/submit" element={<SubmitWork />} />
               <Route path="/artist/:id" element={<ArtistProfile />} />
               <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/cart" element={<Cart />} />
             </Routes>
           </Box>
           <Footer />
         </Box>
       </Router>
+      </CartProvider>
     </ThemeProvider>
   );
 }
