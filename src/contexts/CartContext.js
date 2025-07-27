@@ -22,12 +22,25 @@ export const CartProvider = ({ children }) => {
         // Load cart for this specific user
         const userCartKey = `cart_${user.uid}`;
         const stored = localStorage.getItem(userCartKey);
-        setCart(stored ? JSON.parse(stored) : []);
+        if (stored) {
+          try {
+            const parsedCart = JSON.parse(stored);
+            setCart(parsedCart);
+            console.log(`Loaded cart for user ${user.uid}:`, parsedCart);
+          } catch (error) {
+            console.error('Error parsing stored cart:', error);
+            setCart([]);
+          }
+        } else {
+          setCart([]);
+          console.log(`No stored cart found for user ${user.uid}`);
+        }
       } else {
         // User is signed out
         setCurrentUser(null);
         // Clear cart when user logs out
         setCart([]);
+        console.log('User logged out, cart cleared');
       }
     });
 
@@ -40,9 +53,11 @@ export const CartProvider = ({ children }) => {
       // Save cart for specific user
       const userCartKey = `cart_${currentUser.uid}`;
       localStorage.setItem(userCartKey, JSON.stringify(cart));
+      console.log(`Saved cart for user ${currentUser.uid}:`, cart);
     } else {
       // Save cart for anonymous users
       localStorage.setItem('cart', JSON.stringify(cart));
+      console.log('Saved anonymous cart:', cart);
     }
   }, [cart, currentUser]);
 

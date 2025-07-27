@@ -17,7 +17,6 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
-      clearCart(); // Clear any previous cart when user logs in
       console.log('Login successful:', result.user);
     } catch (err) {
       console.error('Login error:', err);
