@@ -267,7 +267,7 @@ const ProductDetail = () => {
 
         <Grid container spacing={0}>
           {/* Product Images - Left Side */}
-          <Grid item xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
+          <Grid xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
             <Box sx={{ position: 'relative' }}>
               {/* Main Product Image */}
               <Box
@@ -327,7 +327,7 @@ const ProductDetail = () => {
           </Grid>
 
           {/* Product Info - Right Side */}
-          <Grid item xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
+          <Grid xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
             <Box>
               {/* Fandom Badge */}
               <Chip

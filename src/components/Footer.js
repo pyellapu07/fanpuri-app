@@ -35,13 +35,13 @@ const Footer = () => {
       <Container maxWidth="xl" sx={{ pt: 6, pb: 4 }}>
         <Grid container spacing={4}>
           {/* Logo */}
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Box sx={{ mb: 2 }}>
               <Box component="img" src="/assets/FANPURI%20logo.png" alt="Fanpuri Logo" sx={{ height: 48, width: 'auto' }} />
             </Box>
           </Grid>
           {/* Account */}
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid xs={12} sm={6} md={2}>
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Account</Typography>
             <Link href="/profile" color="inherit" display="block" sx={{ mb: 1 }}>Account</Link>
             <Link href="/orders" color="inherit" display="block" sx={{ mb: 1 }}>Order History</Link>
@@ -49,7 +49,7 @@ const Footer = () => {
             <Link href="/settings" color="inherit" display="block" sx={{ mb: 1 }}>Notification Settings</Link>
           </Grid>
           {/* Assistance */}
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Assistance</Typography>
             <Link href="/help" color="inherit" display="block" sx={{ mb: 1 }}>Support Center</Link>
             <Link href="/returns" color="inherit" display="block" sx={{ mb: 1 }}>Returns Policy</Link>
@@ -57,7 +57,7 @@ const Footer = () => {
             <Link href="/privacy" color="inherit" display="block" sx={{ mb: 1 }}>Privacy Policy</Link>
           </Grid>
           {/* About/Connect */}
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid xs={12} sm={6} md={4}>
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Connect With Us</Typography>
             <Link href="/contact" color="inherit" display="block" sx={{ mb: 1 }}>Contact Us</Link>
             <Link href="#" color="inherit" display="block" sx={{ mb: 1 }}>Instagram</Link>

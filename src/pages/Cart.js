@@ -380,7 +380,7 @@ const Cart = () => {
           width: '100%'
         }}>
           {/* Cart Items */}
-          <Grid item xs={12} md={9}>
+          <Grid xs={12} md={9}>
             <Box sx={{ mb: 3 }}>
               {/* Column Headers */}
               <Box sx={{ 
@@ -567,7 +567,7 @@ const Cart = () => {
           </Grid>
 
           {/* Order Summary */}
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card sx={{ p: 3, borderRadius: '5px', position: 'sticky', top: 0, boxShadow: 'none', border: '1px solid #e0e0e0', bgcolor: '#F3F3F7' }}>
               <Typography variant="h5" component="h2" sx={{ fontWeight: 700, mb: 3 }}>
                 Order Summary
