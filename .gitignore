@@ -27,6 +27,7 @@ backend/node_modules/
 backend/uploads/
 backend/data/
 backend/.env
+backend/fanpuri-*-firebase-adminsdk-*.json
 
 # IDE
 .vscode/

@@ -40,12 +40,12 @@ const Home = () => {
         const data = await response.json();
         
         // Transform backend data to match frontend format
-        const transformedProducts = data.map(product => {
+        const transformedProducts = (data.products || data).map(product => {
           console.log('Raw product from backend:', product); // Debug log
           return {
             id: product.id,
             name: product.name || 'Untitled Product',
-            artist: product.artistName || 'Unknown Artist',
+            artist: product.artist?.name || product.artistName || 'Unknown Artist',
             price: product.price,
             originalPrice: product.originalPrice,
             image: product.images && product.images.length > 0 ? `http://localhost:5000${product.images[0].url}` : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop',

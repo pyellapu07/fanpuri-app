@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .error { color: red; margin: 10px 0; }
+        .success { color: green; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Upload Test</h1>
+    
+    <form id="uploadForm">
+        <div class="form-group">
+            <label>Product Name:</label>
+            <input type="text" name="name" value="Test Product" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Artist Name:</label>
+            <input type="text" name="artistName" value="Test Artist" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Description:</label>
+            <textarea name="description">Test description</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Price:</label>
+            <input type="number" name="price" value="999" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Category:</label>
+            <input type="text" name="category" value="Tollywood" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Image:</label>
+            <input type="file" name="images" accept="image/*" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Add New Artist:</label>
+            <input type="checkbox" name="isNewArtist" value="true" checked>
+        </div>
+        
+        <button type="submit">Upload Test Product</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                console.log('Sending request...');
+                const response = await fetch('/api/upload/product', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Success: ${data.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${data.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html> 
