@@ -118,6 +118,25 @@
             display: none;
         }
 
+        /* Mobile file input fallback */
+        @media (max-width: 768px) {
+            .file-upload input[type="file"] {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+                z-index: 10;
+            }
+            
+            .file-upload {
+                position: relative;
+            }
+        }
+
         .preview-images {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -524,6 +543,14 @@
                     <div class="file-upload" id="fileUploadArea">
                         <p>Click to select additional images (up to 5)</p>
                         <input type="file" id="newImages" name="newImages" multiple accept="image/*" style="display: none;">
+                        <!-- Mobile-friendly fallback button -->
+                        <button type="button" id="mobileFileButton" style="display: none; margin-top: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; font-size: 16px;">
+                            📱 Select Images (Mobile)
+                        </button>
+                        <!-- Debug button for testing -->
+                        <button type="button" id="debugFileButton" style="margin-top: 10px; padding: 10px 20px; background: #ff6b6b; color: white; border: none; border-radius: 5px; font-size: 16px;">
+                            🔧 Debug: Direct File Select
+                        </button>
                     </div>
                     <div id="newImagesPreview" class="preview-images">
                         <!-- New image previews will be shown here -->
@@ -732,7 +759,11 @@
 
         // Cross-device file upload handling
         const newImagesUploadArea = document.getElementById('fileUploadArea');
-        if (newImagesUploadArea) {
+        const mobileFileButton = document.getElementById('mobileFileButton');
+        const debugFileButton = document.getElementById('debugFileButton');
+        const fileInput = document.getElementById('newImages');
+        
+        if (newImagesUploadArea && fileInput) {
             // Detect device type
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -740,19 +771,84 @@
             
             console.log('Edit page - Device detected:', { isMobile, isIOS, isAndroid });
             
-            // Universal click handler (works for both mobile and desktop)
+            // Function to trigger file selection
+            function triggerFileSelection() {
+                console.log('Triggering file selection...');
+                try {
+                    // Try multiple approaches for mobile compatibility
+                    if (isMobile) {
+                        // For mobile, try to focus first, then click
+                        fileInput.focus();
+                        setTimeout(() => {
+                            fileInput.click();
+                        }, 50);
+                    } else {
+                        // For desktop, direct click
+                        fileInput.click();
+                    }
+                } catch (error) {
+                    console.error('Error triggering file selection:', error);
+                    // Fallback: show mobile button
+                    if (mobileFileButton) {
+                        mobileFileButton.style.display = 'block';
+                    }
+                }
+            }
+            
+            // Show mobile button for iOS devices
+            if (isIOS && mobileFileButton) {
+                mobileFileButton.style.display = 'block';
+                mobileFileButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Mobile file button clicked');
+                    triggerFileSelection();
+                });
+            }
+            
+            // Debug button for testing
+            if (debugFileButton) {
+                debugFileButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Debug file button clicked');
+                    console.log('File input element:', fileInput);
+                    console.log('File input properties:', {
+                        display: window.getComputedStyle(fileInput).display,
+                        visibility: window.getComputedStyle(fileInput).visibility,
+                        position: window.getComputedStyle(fileInput).position,
+                        opacity: window.getComputedStyle(fileInput).opacity,
+                        zIndex: window.getComputedStyle(fileInput).zIndex
+                    });
+                    
+                    // Try direct click
+                    try {
+                        fileInput.click();
+                        console.log('Direct file input click executed');
+                    } catch (error) {
+                        console.error('Direct file input click failed:', error);
+                    }
+                });
+            }
+            
+            // Universal click handler
             newImagesUploadArea.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('File upload area clicked');
-                document.getElementById('newImages').click();
+                triggerFileSelection();
             });
             
             // Touch-specific handling for mobile
             if (isMobile) {
+                let touchStartTime = 0;
+                let touchStartY = 0;
+                
                 newImagesUploadArea.addEventListener('touchstart', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
+                    touchStartTime = Date.now();
+                    touchStartY = e.touches[0].clientY;
                     console.log('Touch start on file upload area');
                     this.style.backgroundColor = '#e8ecff';
                 }, { passive: false });
@@ -760,12 +856,20 @@
                 newImagesUploadArea.addEventListener('touchend', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Touch end on file upload area');
+                    const touchEndTime = Date.now();
+                    const touchDuration = touchEndTime - touchStartTime;
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const touchDistance = Math.abs(touchEndY - touchStartY);
+                    
+                    console.log('Touch end on file upload area', { touchDuration, touchDistance });
                     this.style.backgroundColor = '';
-                    // Trigger file input click
-                    setTimeout(() => {
-                        document.getElementById('newImages').click();
-                    }, 100);
+                    
+                    // Only trigger if it's a short tap (not a scroll)
+                    if (touchDuration < 300 && touchDistance < 10) {
+                        setTimeout(() => {
+                            triggerFileSelection();
+                        }, 100);
+                    }
                 }, { passive: false });
                 
                 // Prevent context menu on long press
@@ -778,6 +882,14 @@
                     e.preventDefault();
                 }, { passive: false });
             }
+            
+            // Test file input accessibility
+            setTimeout(() => {
+                console.log('File input element:', fileInput);
+                console.log('File input display style:', window.getComputedStyle(fileInput).display);
+                console.log('File input visibility:', window.getComputedStyle(fileInput).visibility);
+                console.log('File input position:', window.getComputedStyle(fileInput).position);
+            }, 1000);
         }
 
         // Cross-device form handling
