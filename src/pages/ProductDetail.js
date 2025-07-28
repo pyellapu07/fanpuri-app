@@ -398,13 +398,13 @@ const ProductDetail = () => {
             sx={{ 
               bgcolor: '#1976d2', 
               color: 'white', 
-              py: 3, 
+              py: { xs: 2, md: 2.5 }, 
               px: { xs: 3, md: 0 },
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 2,
-              fontSize: '1.25rem',
+              fontSize: { xs: '1rem', md: '1.25rem' },
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '1px',
@@ -762,7 +762,9 @@ const ProductDetail = () => {
                     onChange={e => { 
                       e.preventDefault(); 
                       e.stopPropagation(); 
-                      updateQuantity(product.id, Number(e.target.value)); 
+                      const newQuantity = Number(e.target.value);
+                      const maxAllowed = product.isLimited ? product.remainingCopies : 12;
+                      updateQuantity(product.id, Math.min(newQuantity, maxAllowed)); 
                     }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -794,7 +796,7 @@ const ProductDetail = () => {
                           },
                         }}
                       >
-                        {[...Array(12)].map((_, i) => (
+                        {[...Array(Math.min(12, product.isLimited ? product.remainingCopies : 12))].map((_, i) => (
                       <MenuItem 
                         key={i + 1} 
                         value={i + 1} 
@@ -842,6 +844,11 @@ const ProductDetail = () => {
                     if (!user) {
                       setLoginDialogOpen(true);
                     } else {
+                      // Check if this is a limited edition product and if we're at the limit
+                      if (product.isLimited && product.remainingCopies <= 0) {
+                        // Product is sold out
+                        return;
+                      }
                       addToCart(product);
                     }
                   }}

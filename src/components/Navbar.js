@@ -656,71 +656,113 @@ const Navbar = () => {
             >
               <ListItemText primary="FanHub" sx={{ color: 'black' }} />
             </ListItem>
-            <ListItem 
-              button 
-              component={Link} 
-              to="/login" 
-              onClick={handleMobileMenuClose}
-              sx={{ 
-                textTransform: 'uppercase',
-                fontWeight: 600,
-                fontSize: '1rem',
-                color: 'black',
-                '&:hover': {
-                  backgroundColor: 'rgba(0,0,0,0.1)',
-                }
-              }}
-            >
-              <ListItemText primary="Login" sx={{ color: 'black' }} />
-            </ListItem>
+            {!user ? (
+              <ListItem 
+                button 
+                component={Link} 
+                to="/login" 
+                onClick={handleMobileMenuClose}
+                sx={{ 
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  color: 'black',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                  }
+                }}
+              >
+                <ListItemText primary="Login" sx={{ color: 'black' }} />
+              </ListItem>
+            ) : (
+              <>
+                <ListItem 
+                  button 
+                  onClick={handleMobileMenuClose}
+                  sx={{ 
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    color: 'black',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.1)',
+                    }
+                  }}
+                >
+                  <ListItemText 
+                    primary={user.displayName || user.email?.split('@')[0] || 'User'} 
+                    sx={{ color: 'black' }} 
+                  />
+                </ListItem>
+              </>
+            )}
           </List>
 
-          <Divider sx={{ backgroundColor: 'rgba(0,0,0,0.2)', my: 2 }} />
-          
-          <List>
-            <ListItem 
-              button 
-              component={Link} 
-              to="/profile" 
-              onClick={handleMobileMenuClose}
-              sx={{ 
-                color: 'black',
-                '&:hover': {
-                  backgroundColor: 'rgba(0,0,0,0.1)',
-                }
-              }}
-            >
-              <ListItemText primary="My Profile" sx={{ color: 'black' }} />
-            </ListItem>
-            <ListItem 
-              button 
-              component={Link} 
-              to="/orders" 
-              onClick={handleMobileMenuClose}
-              sx={{ 
-                color: 'black',
-                '&:hover': {
-                  backgroundColor: 'rgba(0,0,0,0.1)',
-                }
-              }}
-            >
-              <ListItemText primary="My Orders" sx={{ color: 'black' }} />
-            </ListItem>
-            <ListItem 
-              button 
-              component={Link} 
-              to="/submit" 
-              onClick={handleMobileMenuClose}
-              sx={{ 
-                color: 'black',
-                '&:hover': {
-                  backgroundColor: 'rgba(0,0,0,0.1)',
-                }
-              }}
-            >
-              <ListItemText primary="Submit Work" sx={{ color: 'black' }} />
-            </ListItem>
-          </List>
+          {user && (
+            <>
+              <Divider sx={{ backgroundColor: 'rgba(0,0,0,0.2)', my: 2 }} />
+              
+              <List>
+                <ListItem 
+                  button 
+                  component={Link} 
+                  to="/profile" 
+                  onClick={handleMobileMenuClose}
+                  sx={{ 
+                    color: 'black',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.1)',
+                    }
+                  }}
+                >
+                  <ListItemText primary="My Profile" sx={{ color: 'black' }} />
+                </ListItem>
+                <ListItem 
+                  button 
+                  component={Link} 
+                  to="/orders" 
+                  onClick={handleMobileMenuClose}
+                  sx={{ 
+                    color: 'black',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.1)',
+                    }
+                  }}
+                >
+                  <ListItemText primary="My Orders" sx={{ color: 'black' }} />
+                </ListItem>
+                <ListItem 
+                  button 
+                  component={Link} 
+                  to="/submit" 
+                  onClick={handleMobileMenuClose}
+                  sx={{ 
+                    color: 'black',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.1)',
+                    }
+                  }}
+                >
+                  <ListItemText primary="Submit Work" sx={{ color: 'black' }} />
+                </ListItem>
+                <ListItem 
+                  button 
+                  onClick={() => {
+                    handleLogout();
+                    handleMobileMenuClose();
+                  }}
+                  sx={{ 
+                    color: 'black',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.1)',
+                    }
+                  }}
+                >
+                  <ListItemText primary="Logout" sx={{ color: 'black' }} />
+                </ListItem>
+              </List>
+            </>
+          )}
         </Box>
       </Drawer>
     </AppBar>
