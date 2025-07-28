@@ -32,24 +32,22 @@ function isAdminUser(user) {
 
 // Authentication state observer
 auth.onAuthStateChanged(function(user) {
-  // Check if we're already on the admin page
-  const isOnAdminPage = document.querySelector('.header h1')?.textContent === 'Fanpuri Admin Dashboard';
+  console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
   
   if (user) {
     if (isAdminUser(user)) {
       // User is admin, show admin panel
-      if (!isOnAdminPage) {
-        showAdminPanel();
-      }
+      console.log('Admin user detected, showing admin panel');
+      showAdminPanel();
     } else {
       // User is not admin, show access denied
+      console.log('Non-admin user detected, showing access denied');
       showAccessDenied();
     }
   } else {
     // No user signed in, show login form
-    if (!isOnAdminPage) {
-      showLoginForm();
-    }
+    console.log('No user signed in, showing login form');
+    showLoginForm();
   }
 });
 
@@ -162,9 +160,11 @@ function showAccessDenied() {
 
 // Show admin panel
 function showAdminPanel() {
+  console.log('Showing admin panel');
   // Only reload if we're currently showing login/access denied and haven't reloaded yet
   if (!hasReloaded && (document.querySelector('#loginForm') || document.querySelector('h1')?.textContent === 'Access Denied')) {
     hasReloaded = true;
+    console.log('Reloading page to show admin panel');
     window.location.reload();
   }
 }
@@ -186,7 +186,9 @@ async function login() {
 
 // Logout function
 function logout() {
+  console.log('Logout function called');
   auth.signOut().then(() => {
+    console.log('Successfully signed out');
     // Authentication state observer will handle the rest
   }).catch((error) => {
     console.error('Error signing out:', error);
