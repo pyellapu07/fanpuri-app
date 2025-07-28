@@ -521,9 +521,9 @@
 
                 <div class="form-group">
                     <label>Add New Images</label>
-                    <div class="file-upload" onclick="document.getElementById('newImages').click()">
+                    <div class="file-upload" id="fileUploadArea">
                         <p>Click to select additional images (up to 5)</p>
-                        <input type="file" id="newImages" name="images" multiple accept="image/*">
+                        <input type="file" id="newImages" name="newImages" multiple accept="image/*" style="display: none;">
                     </div>
                     <div id="newImagesPreview" class="preview-images">
                         <!-- New image previews will be shown here -->
@@ -686,6 +686,9 @@
             const preview = document.getElementById('newImagesPreview');
             preview.innerHTML = '';
             
+            console.log('File input change event triggered');
+            console.log('Files selected:', e.target.files ? e.target.files.length : 0);
+            
             if (e.target.files && e.target.files.length > 0) {
                 console.log('New files selected:', e.target.files.length);
                 
@@ -695,12 +698,14 @@
                     // Validate file type
                     if (!file.type.startsWith('image/')) {
                         console.error('Invalid file type:', file.type);
+                        alert('Please select only image files (JPEG, PNG, GIF, etc.)');
                         return;
                     }
                     
                     // Validate file size (5MB limit)
                     if (file.size > 5 * 1024 * 1024) {
                         console.error('File too large:', file.name, file.size);
+                        alert(`File "${file.name}" is too large. Please select files smaller than 5MB.`);
                         return;
                     }
                     
@@ -712,9 +717,11 @@
                             <img src="${e.target.result}" alt="New image preview">
                         `;
                         preview.appendChild(div);
+                        console.log('Image preview added for:', file.name);
                     };
                     reader.onerror = function() {
                         console.error('Error reading file:', file.name);
+                        alert(`Error reading file "${file.name}". Please try again.`);
                     };
                     reader.readAsDataURL(file);
                 });
@@ -724,7 +731,7 @@
         });
 
         // Cross-device file upload handling
-        const newImagesUploadArea = document.querySelector('.file-upload');
+        const newImagesUploadArea = document.getElementById('fileUploadArea');
         if (newImagesUploadArea) {
             // Detect device type
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -733,35 +740,44 @@
             
             console.log('Edit page - Device detected:', { isMobile, isIOS, isAndroid });
             
-            // Add touch event handling for mobile
+            // Universal click handler (works for both mobile and desktop)
+            newImagesUploadArea.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('File upload area clicked');
+                document.getElementById('newImages').click();
+            });
+            
+            // Touch-specific handling for mobile
             if (isMobile) {
                 newImagesUploadArea.addEventListener('touchstart', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    document.getElementById('newImages').click();
+                    console.log('Touch start on file upload area');
+                    this.style.backgroundColor = '#e8ecff';
                 }, { passive: false });
                 
-                // Add visual feedback for mobile
-                newImagesUploadArea.addEventListener('touchstart', function() {
-                    this.style.backgroundColor = '#e8ecff';
-                });
-                
-                newImagesUploadArea.addEventListener('touchend', function() {
+                newImagesUploadArea.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Touch end on file upload area');
                     this.style.backgroundColor = '';
-                });
+                    // Trigger file input click
+                    setTimeout(() => {
+                        document.getElementById('newImages').click();
+                    }, 100);
+                }, { passive: false });
                 
                 // Prevent context menu on long press
                 newImagesUploadArea.addEventListener('contextmenu', function(e) {
                     e.preventDefault();
                 });
+                
+                // Prevent default touch behaviors
+                newImagesUploadArea.addEventListener('touchmove', function(e) {
+                    e.preventDefault();
+                }, { passive: false });
             }
-            
-            // Fallback for desktop
-            newImagesUploadArea.addEventListener('click', function(e) {
-                if (!isMobile) {
-                    document.getElementById('newImages').click();
-                }
-            });
         }
 
         // Cross-device form handling
@@ -817,18 +833,35 @@
             formData.append('currentImages', JSON.stringify(currentImages));
             
             // Add new images
-            const imageFiles = form.newImages.files;
-            Array.from(imageFiles).forEach(file => {
-                formData.append('images', file);
-            });
+            const imageFiles = document.getElementById('newImages').files;
+            console.log('New image files to upload:', imageFiles.length);
+            
+            if (imageFiles && imageFiles.length > 0) {
+                Array.from(imageFiles).forEach((file, index) => {
+                    console.log(`Adding file ${index + 1}:`, file.name, file.size, file.type);
+                    formData.append('images', file);
+                });
+            } else {
+                console.log('No new image files to upload');
+            }
             
             try {
+                console.log('Submitting form data...');
+                console.log('FormData entries:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(key, value);
+                }
+                
                 const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
                     method: 'PUT',
                     body: formData
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
                 const result = await response.json();
+                console.log('Response data:', result);
                 
                 if (response.ok) {
                     showSuccess('Product updated successfully!');
@@ -836,9 +869,11 @@
                         window.close();
                     }, 2000);
                 } else {
-                    showError(result.message || 'Error updating product');
+                    const errorMessage = result.message || result.error || `HTTP ${response.status}: ${response.statusText}`;
+                    showError('Error updating product: ' + errorMessage);
                 }
             } catch (error) {
+                console.error('Form submission error:', error);
                 showError('Error updating product: ' + error.message);
             }
         });
