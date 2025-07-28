@@ -83,11 +83,13 @@ const Home = () => {
           console.log('Raw product from backend:', product); // Debug log
           // Get artist name from populated artist object
           const artistName = product.artist?.name || 'Unknown Artist';
+          const isArtistVerified = product.artist?.isVerified || false;
           
           return {
             id: product.id,
             name: product.name || 'Untitled Product',
             artist: artistName,
+            isArtistVerified: isArtistVerified,
             price: product.price,
             originalPrice: product.originalPrice,
             image: product.images && product.images.length > 0 ? product.images[0].url : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop',
@@ -654,21 +656,32 @@ const Home = () => {
                           justifyContent: 'space-between'
                         }}>
                           {/* Artist Name - Above Title in CAPS */}
-                    <Typography 
-                      variant="caption" 
-                      color="text.secondary" 
-                      sx={{ 
-                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                              mb: 0.25,
-                              textAlign: 'left',
-                              textTransform: 'uppercase',
-                              fontWeight: 400,
-                              letterSpacing: '0.5px',
-                              color: '#666',
-                            }}
-                          >
-                            {product.artist}
-                    </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                            <Typography 
+                              variant="caption" 
+                              color="text.secondary" 
+                              sx={{ 
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                textAlign: 'left',
+                                textTransform: 'uppercase',
+                                fontWeight: 400,
+                                letterSpacing: '0.5px',
+                                color: '#666',
+                              }}
+                            >
+                              {product.artist}
+                            </Typography>
+                            {product.isArtistVerified && (
+                              <img
+                                src="/assets/verified_24dp_1976D2_FILL1_wght400_GRAD0_opsz24.svg"
+                                alt="Verified Artist"
+                                style={{
+                                  width: '12px',
+                                  height: '12px'
+                                }}
+                              />
+                            )}
+                          </Box>
 
                           {/* Product Name - Larger */}
                     <Typography 
