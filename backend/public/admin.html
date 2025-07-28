@@ -1048,9 +1048,14 @@
                             <br><small>${artist.email}</small>
                             <br><small>Verified: ${artist.isVerified ? 'Yes' : 'No'}</small>
                         </div>
-                        <button onclick="toggleArtistVerification('${artist.id}', ${artist.isVerified})" class="btn btn-secondary">
-                            ${artist.isVerified ? 'Unverify' : 'Verify'}
-                        </button>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="toggleArtistVerification('${artist.id}', ${artist.isVerified})" class="btn btn-secondary">
+                                ${artist.isVerified ? 'Unverify' : 'Verify'}
+                            </button>
+                            <button onclick="confirmRemoveArtist('${artist.id}', '${artist.name}')" class="btn btn-danger">
+                                Remove
+                            </button>
+                        </div>
                     `;
                     list.appendChild(div);
                 });
@@ -1104,6 +1109,33 @@
                 }
             } catch (error) {
                 console.error('Error toggling artist verification:', error);
+            }
+        }
+
+        // Confirm remove artist
+        function confirmRemoveArtist(artistId, artistName) {
+            if (confirm(`Are you sure you want to permanently remove artist "${artistName}"? This action cannot be undone and will also remove all their products.`)) {
+                removeArtist(artistId);
+            }
+        }
+
+        // Remove artist
+        async function removeArtist(artistId) {
+            try {
+                const response = await fetch(`${API_BASE}/admin/artists/${artistId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('Artist removed successfully!', 'success');
+                    loadArtists();
+                    loadStats();
+                } else {
+                    const result = await response.json();
+                    showAlert(result.message || 'Error removing artist', 'error');
+                }
+            } catch (error) {
+                showAlert('Error removing artist: ' + error.message, 'error');
             }
         }
 
@@ -1287,6 +1319,9 @@
                         <div class="search-result-actions">
                             <button onclick="toggleArtistVerification('${item.id}', ${item.isVerified})" class="btn btn-secondary">
                                 ${item.isVerified ? 'Unverify' : 'Verify'}
+                            </button>
+                            <button onclick="confirmRemoveArtist('${item.id}', '${item.name}')" class="btn btn-danger">
+                                Remove
                             </button>
                         </div>
                     </div>
