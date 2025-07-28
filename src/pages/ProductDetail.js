@@ -56,6 +56,8 @@ const ProductDetail = () => {
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
   const [waitlistError, setWaitlistError] = useState('');
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -230,6 +232,31 @@ const ProductDetail = () => {
 
   const handleWishlist = () => {
     setIsWishlisted(!isWishlisted);
+  };
+
+  // Swipe handlers for mobile image navigation
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && selectedImage < product.images.length - 1) {
+      setSelectedImage(selectedImage + 1);
+    }
+    if (isRightSwipe && selectedImage > 0) {
+      setSelectedImage(selectedImage - 1);
+    }
   };
 
   const handleWaitlistSubmit = async (e) => {
@@ -429,16 +456,20 @@ const ProductDetail = () => {
 
         <Grid container spacing={0}>
           {/* Product Images - Left Side */}
-          <Grid xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
+          <Grid xs={12} md={6} sx={{ p: { xs: 1, md: 4 } }}>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', width: '100%' }}>
-              {/* Thumbnail Images - Left Side */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {/* Thumbnail Images - Left Side (Hidden on Mobile) */}
+              <Box sx={{ 
+                display: { xs: 'none', md: 'flex' }, 
+                flexDirection: 'column', 
+                gap: 1 
+              }}>
                 {product.images.map((image, index) => (
                   <Box
                     key={index}
-                  component="img"
+                    component="img"
                     src={image}
-                  alt={`${product.name} ${index + 1}`}
+                    alt={`${product.name} ${index + 1}`}
                     onClick={() => setSelectedImage(index)}
                     sx={{
                       width: 80,
@@ -457,17 +488,23 @@ const ProductDetail = () => {
               </Box>
 
               {/* Main Product Image - Right Side */}
-              <Box sx={{ 
-                position: 'relative', 
-                flex: 1,
-                width: '700px',
-                height: '600px',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
+              <Box 
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                sx={{ 
+                  position: 'relative', 
+                  flex: 1,
+                  width: { xs: '100%', md: '700px' },
+                  height: { xs: '400px', md: '600px' },
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  touchAction: 'pan-y' // Allow vertical scrolling but handle horizontal swipes
+                }}
+              >
                 <Box
                   component="img"
                   src={product.images[selectedImage]}
@@ -495,12 +532,59 @@ const ProductDetail = () => {
                 >
                   {isWishlisted ? <Favorite color="error" /> : <FavoriteBorder />}
                 </IconButton>
+
+                {/* Mobile Image Navigation Dots */}
+                <Box sx={{ 
+                  display: { xs: 'flex', md: 'none' },
+                  position: 'absolute',
+                  bottom: 16,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  gap: 1
+                }}>
+                  {product.images.map((_, index) => (
+                    <Box
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: selectedImage === index ? '#000' : 'rgba(255,255,255,0.5)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          bgcolor: selectedImage === index ? '#000' : 'rgba(255,255,255,0.8)',
+                        },
+                      }}
+                    />
+                  ))}
+                </Box>
+
+                {/* Swipe Instructions (Mobile Only) */}
+                {product.images.length > 1 && (
+                  <Box sx={{ 
+                    display: { xs: 'block', md: 'none' },
+                    position: 'absolute',
+                    top: 16,
+                    left: 16,
+                    bgcolor: 'rgba(0,0,0,0.7)',
+                    color: 'white',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    opacity: 0.8
+                  }}>
+                    Swipe to view more
+                  </Box>
+                )}
               </Box>
-          </Box>
-        </Grid>
+            </Box>
+          </Grid>
 
           {/* Product Info - Right Side */}
-          <Grid xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
+          <Grid xs={12} md={6} sx={{ p: { xs: 1, md: 4 } }}>
           <Box>
               {/* Fandom Badge */}
             <Chip
