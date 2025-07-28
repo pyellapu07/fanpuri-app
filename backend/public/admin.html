@@ -391,6 +391,149 @@
             font-weight: bold;
             color: #007bff;
         }
+
+        /* Search Bar Styles */
+        .search-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .search-select {
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .search-select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .search-btn {
+            background: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #0056b3;
+        }
+
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #545b62;
+        }
+
+        .search-results {
+            margin-top: 20px;
+        }
+
+        .search-result-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            transition: all 0.3s ease;
+        }
+
+        .search-result-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .search-result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .search-result-details {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .search-result-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Mobile responsive for search */
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-input {
+                min-width: auto;
+            }
+            
+            .search-result-actions {
+                flex-direction: column;
+            }
+            
+            .search-result-actions .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -433,6 +576,29 @@
             <div class="stat-card">
                 <div class="stat-number" id="verifiedArtists">-</div>
                 <div class="stat-label">Verified Artists</div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <h2>Search Products & Artists</h2>
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="Search by product name, artist name, category, or tags..."
+                >
+                <select id="searchType" class="search-select">
+                    <option value="all">All</option>
+                    <option value="products">Products Only</option>
+                    <option value="artists">Artists Only</option>
+                </select>
+                <button onclick="performSearch()" class="search-btn">🔍 Search</button>
+                <button onclick="clearSearch()" class="clear-btn">Clear</button>
+            </div>
+            <div id="searchResults" class="search-results" style="display: none;">
+                <!-- Search results will be displayed here -->
             </div>
         </div>
 
@@ -974,6 +1140,153 @@
                 alert.remove();
             }, 5000);
         }
+
+        // Search functionality
+        let allProducts = [];
+        let allArtists = [];
+
+        // Perform search
+        async function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const searchType = document.getElementById('searchType').value;
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!searchTerm) {
+                showAlert('Please enter a search term', 'error');
+                return;
+            }
+
+            try {
+                // Load data if not already loaded
+                if (allProducts.length === 0) {
+                    const productsResponse = await fetch(`${API_BASE}/admin/products`);
+                    const productsData = await productsResponse.json();
+                    allProducts = productsData.products || [];
+                }
+
+                if (allArtists.length === 0) {
+                    const artistsResponse = await fetch(`${API_BASE}/admin/artists`);
+                    const artistsData = await artistsResponse.json();
+                    allArtists = artistsData.artists || [];
+                }
+
+                let results = [];
+
+                // Search based on type
+                if (searchType === 'all' || searchType === 'products') {
+                    const productResults = allProducts.filter(product => {
+                        const searchLower = searchTerm.toLowerCase();
+                        return (
+                            product.name?.toLowerCase().includes(searchLower) ||
+                            product.artist?.name?.toLowerCase().includes(searchLower) ||
+                            product.category?.toLowerCase().includes(searchLower) ||
+                            product.tags?.some(tag => tag.toLowerCase().includes(searchLower)) ||
+                            product.description?.toLowerCase().includes(searchLower)
+                        );
+                    });
+                    results.push(...productResults.map(product => ({ ...product, type: 'product' })));
+                }
+
+                if (searchType === 'all' || searchType === 'artists') {
+                    const artistResults = allArtists.filter(artist => {
+                        const searchLower = searchTerm.toLowerCase();
+                        return (
+                            artist.name?.toLowerCase().includes(searchLower) ||
+                            artist.username?.toLowerCase().includes(searchLower) ||
+                            artist.email?.toLowerCase().includes(searchLower)
+                        );
+                    });
+                    results.push(...artistResults.map(artist => ({ ...artist, type: 'artist' })));
+                }
+
+                displaySearchResults(results, searchTerm);
+            } catch (error) {
+                console.error('Error performing search:', error);
+                showAlert('Error performing search: ' + error.message, 'error');
+            }
+        }
+
+        // Display search results
+        function displaySearchResults(results, searchTerm) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="no-results">
+                        <h3>No results found for "${searchTerm}"</h3>
+                        <p>Try searching with different keywords or check your spelling.</p>
+                    </div>
+                `;
+            } else {
+                resultsContainer.innerHTML = `
+                    <h3>Found ${results.length} result${results.length > 1 ? 's' : ''} for "${searchTerm}"</h3>
+                    ${results.map(item => createSearchResultItem(item)).join('')}
+                `;
+            }
+            
+            resultsContainer.style.display = 'block';
+        }
+
+        // Create search result item
+        function createSearchResultItem(item) {
+            if (item.type === 'product') {
+                return `
+                    <div class="search-result-item">
+                        <div class="search-result-title">${item.name}</div>
+                        <div class="search-result-details">
+                            <strong>Artist:</strong> ${item.artist?.name || 'Unknown'} | 
+                            <strong>Category:</strong> ${item.category || 'N/A'} | 
+                            <strong>Price:</strong> ₹${item.price || 'N/A'}
+                            ${item.isLimitedEdition ? ' | <strong>Limited Edition</strong>' : ''}
+                            ${item.isFeatured ? ' | <strong>Featured</strong>' : ''}
+                        </div>
+                        <div class="search-result-actions">
+                            <button onclick="editProduct('${item.id}')" class="btn btn-primary">Edit</button>
+                            <button onclick="confirmRemoveProduct('${item.id}', '${item.name}')" class="btn btn-danger">Remove</button>
+                            <button onclick="toggleFeatured('${item.id}', ${item.isFeatured})" class="btn btn-secondary">
+                                ${item.isFeatured ? 'Unfeature' : 'Feature'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (item.type === 'artist') {
+                return `
+                    <div class="search-result-item">
+                        <div class="search-result-title">${item.name}</div>
+                        <div class="search-result-details">
+                            <strong>Username:</strong> ${item.username || 'N/A'} | 
+                            <strong>Email:</strong> ${item.email || 'N/A'} | 
+                            <strong>Verified:</strong> ${item.isVerified ? 'Yes' : 'No'}
+                        </div>
+                        <div class="search-result-actions">
+                            <button onclick="toggleArtistVerification('${item.id}', ${item.isVerified})" class="btn btn-secondary">
+                                ${item.isVerified ? 'Unverify' : 'Verify'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            return '';
+        }
+
+        // Clear search
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchType').value = 'all';
+            document.getElementById('searchResults').style.display = 'none';
+        }
+
+        // Add enter key support for search
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        performSearch();
+                    }
+                });
+            }
+        });
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
