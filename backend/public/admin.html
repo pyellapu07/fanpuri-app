@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fanpuri Admin - Product Upload</title>
     
     <!-- Firebase SDK -->
@@ -90,6 +90,11 @@
             border-radius: 5px;
             cursor: pointer;
             transition: border-color 0.3s;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
         }
 
         .file-upload:hover {
@@ -98,6 +103,74 @@
 
         .file-upload input[type="file"] {
             display: none;
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .upload-section {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .file-upload {
+                padding: 30px 15px;
+                min-height: 120px;
+                font-size: 16px;
+            }
+            
+            .file-upload p {
+                margin: 0;
+                font-size: 16px;
+                line-height: 1.4;
+            }
+            
+            input[type="text"],
+            input[type="number"],
+            input[type="email"],
+            textarea,
+            select {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 15px;
+            }
+            
+            .btn {
+                width: 100%;
+                padding: 15px;
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+            
+            .form-group {
+                margin-bottom: 25px;
+            }
+            
+            .preview-images {
+                gap: 8px;
+            }
+            
+            .preview-image {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .tab {
+                padding: 12px;
+                font-size: 14px;
+            }
         }
 
         .preview-images {
@@ -480,17 +553,61 @@
             const preview = document.getElementById('imagePreview');
             preview.innerHTML = '';
             
-            Array.from(e.target.files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'preview-image';
-                    preview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            });
+            if (e.target.files && e.target.files.length > 0) {
+                console.log('Files selected:', e.target.files.length);
+                
+                Array.from(e.target.files).forEach((file, index) => {
+                    console.log('Processing file:', file.name, 'Size:', file.size, 'Type:', file.type);
+                    
+                    // Validate file type
+                    if (!file.type.startsWith('image/')) {
+                        console.error('Invalid file type:', file.type);
+                        return;
+                    }
+                    
+                    // Validate file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                        console.error('File too large:', file.name, file.size);
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'preview-image';
+                        img.alt = file.name;
+                        img.title = file.name;
+                        preview.appendChild(img);
+                    };
+                    reader.onerror = function() {
+                        console.error('Error reading file:', file.name);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                console.log('No files selected');
+            }
         });
+
+        // Mobile-friendly file upload handling
+        const fileUploadArea = document.querySelector('.file-upload');
+        if (fileUploadArea) {
+            // Add touch event handling for mobile
+            fileUploadArea.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                document.getElementById('images').click();
+            });
+            
+            // Add visual feedback for mobile
+            fileUploadArea.addEventListener('touchstart', function() {
+                this.style.backgroundColor = '#f8f9fa';
+            });
+            
+            fileUploadArea.addEventListener('touchend', function() {
+                this.style.backgroundColor = '';
+            });
+        }
 
         // Load artists for dropdown
         async function loadArtistDropdown() {
