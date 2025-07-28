@@ -23,57 +23,92 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
             min-height: 100vh;
             padding: 20px;
+            color: #1e293b;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             overflow: hidden;
         }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
+            padding: 32px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            opacity: 0.9;
         }
 
         .content {
-            padding: 30px;
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+            padding: 24px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-section h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #333;
+            color: #374151;
+            font-size: 0.875rem;
         }
 
         .form-group input,
         .form-group textarea,
         .form-group select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e5e9;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
             border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
         }
 
         .form-group input:focus,
@@ -81,6 +116,7 @@
         .form-group select:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .form-row {
@@ -92,105 +128,199 @@
         .checkbox-group {
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-        }
-
-        .file-upload {
-            border: 2px dashed #667eea;
+            gap: 12px;
+            padding: 16px;
+            background: white;
+            border: 2px solid #e5e7eb;
             border-radius: 8px;
-            padding: 30px;
-            text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-group:hover {
+            border-color: #667eea;
             background: #f8f9ff;
         }
 
-        .file-upload:hover {
-            background: #e8ecff;
-            border-color: #5a6fd8;
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
         }
 
-        .file-upload input[type="file"] {
-            display: none;
-        }
-
-        /* Mobile file input fallback */
-        @media (max-width: 768px) {
-            .file-upload input[type="file"] {
-                display: block !important;
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                opacity: 0;
-                cursor: pointer;
-                z-index: 10;
-            }
-            
-            .file-upload {
-                position: relative;
-            }
-        }
-
-        .preview-images {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .preview-image {
-            position: relative;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .preview-image img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-
-        .remove-image {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #ff4757;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
+        .checkbox-group label {
+            margin: 0;
             cursor: pointer;
-            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Modern Image Upload Area */
+        .image-upload-section {
+            margin-bottom: 40px;
         }
 
         .current-images {
-            margin-bottom: 20px;
+            margin-bottom: 32px;
         }
 
         .current-images h3 {
-            margin-bottom: 15px;
-            color: #333;
+            margin-bottom: 20px;
+            color: #1e293b;
+            font-size: 1.25rem;
+            font-weight: 600;
         }
 
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .image-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: white;
+            transition: transform 0.2s ease;
+        }
+
+        .image-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .image-action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .image-action-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        .image-action-btn.delete {
+            background: rgba(239, 68, 68, 0.9);
+        }
+
+        .image-action-btn.delete:hover {
+            background: rgba(239, 68, 68, 1);
+        }
+
+        /* New Image Upload */
+        .upload-area {
+            border: 3px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f1f5ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e8ecff;
+            transform: scale(1.02);
+        }
+
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #94a3b8;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtext {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .upload-progress {
+            margin-top: 16px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Buttons */
         .btn {
             padding: 12px 24px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             text-decoration: none;
-            display: inline-block;
-            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 48px;
         }
 
         .btn-primary {
@@ -199,70 +329,91 @@
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .btn-secondary {
-            background: #6c757d;
+            background: #6b7280;
             color: white;
         }
 
         .btn-secondary:hover {
-            background: #5a6268;
+            background: #4b5563;
         }
 
         .btn-danger {
-            background: #dc3545;
+            background: #ef4444;
             color: white;
         }
 
         .btn-danger:hover {
-            background: #c82333;
+            background: #dc2626;
         }
 
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        /* Alerts */
         .alert {
-            padding: 15px;
+            padding: 16px 20px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            border-left: 4px solid;
         }
 
         .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #f0fdf4;
+            color: #166534;
+            border-left-color: #22c55e;
         }
 
         .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #fef2f2;
+            color: #991b1b;
+            border-left-color: #ef4444;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            color: #1e40af;
+            border-left-color: #3b82f6;
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #666;
+            padding: 60px 20px;
+            color: #6b7280;
         }
 
-        .artist-section {
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            background: #f8f9fa;
+        .loading h3 {
+            margin-bottom: 16px;
+            font-size: 1.25rem;
         }
 
-        .artist-section h3 {
-            margin-bottom: 15px;
-            color: #333;
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
-        /* Mobile-specific styles */
+        /* Mobile Responsive */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -273,118 +424,93 @@
                 border-radius: 0;
             }
             
+            .header {
+                padding: 24px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.875rem;
+            }
+            
             .content {
+                padding: 24px 20px;
+            }
+            
+            .form-section {
                 padding: 20px;
+                margin-bottom: 24px;
             }
             
             .form-row {
                 grid-template-columns: 1fr;
-                gap: 15px;
+                gap: 16px;
             }
             
-            .file-upload {
-                padding: 25px 15px;
-                min-height: 100px;
-                font-size: 16px;
-                -webkit-tap-highlight-color: transparent;
-                -webkit-touch-callout: none;
-                -webkit-user-select: none;
-                user-select: none;
+            .upload-area {
+                padding: 32px 16px;
             }
             
-            .file-upload p {
-                margin: 0;
-                font-size: 16px;
-                line-height: 1.4;
+            .upload-icon {
+                font-size: 2.5rem;
             }
             
-            .form-group input,
-            .form-group textarea,
-            .form-group select {
-                font-size: 16px; /* Prevents zoom on iOS */
-                padding: 15px;
-                -webkit-appearance: none;
-                border-radius: 8px;
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 12px;
             }
             
-            /* Fix for iOS select styling */
-            select {
-                background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-                background-repeat: no-repeat;
-                background-position: right 10px center;
-                background-size: 16px;
-                padding-right: 40px;
+            .image-item img {
+                height: 140px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
             }
             
             .btn {
                 width: 100%;
-                padding: 15px;
-                font-size: 16px;
-                margin-bottom: 10px;
-                -webkit-tap-highlight-color: transparent;
-                -webkit-touch-callout: none;
-                -webkit-user-select: none;
-                user-select: none;
+                padding: 16px;
+                font-size: 1rem;
+            }
+        }
+
+        /* Small screens */
+        @media (max-width: 480px) {
+            .content {
+                padding: 20px 16px;
             }
             
-            .form-group {
-                margin-bottom: 25px;
+            .form-section {
+                padding: 16px;
             }
             
-            .preview-images {
+            .upload-area {
+                padding: 24px 12px;
+            }
+            
+            .image-grid {
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                gap: 10px;
+                gap: 8px;
             }
             
-            .preview-image img {
+            .image-item img {
                 height: 120px;
             }
-            
-            .remove-image {
-                width: 30px;
-                height: 30px;
-                font-size: 14px;
-                -webkit-tap-highlight-color: transparent;
-            }
         }
 
-        /* Additional device-specific fixes */
-        @media (max-width: 480px) {
-            body {
-                padding: 5px;
-            }
-            
-            .content {
-                padding: 15px;
-            }
-            
-            .file-upload {
-                padding: 20px 10px;
-                min-height: 80px;
-            }
-            
-            .btn {
-                padding: 12px;
-                font-size: 14px;
-            }
+        /* Focus styles for accessibility */
+        .btn:focus,
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus,
+        .upload-area:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
         }
 
-        /* Safari-specific fixes */
-        @supports (-webkit-touch-callout: none) {
-            .file-upload {
-                -webkit-touch-callout: none;
-            }
-            
-            input, textarea, select {
-                -webkit-appearance: none;
-            }
-        }
-
-        /* Android-specific fixes */
-        @media screen and (-webkit-min-device-pixel-ratio: 0) {
-            .file-upload {
-                -webkit-tap-highlight-color: transparent;
-            }
+        /* Smooth transitions */
+        * {
+            transition: all 0.2s ease;
         }
     </style>
 </head>
@@ -392,11 +518,12 @@
     <div class="container">
         <div class="header">
             <h1>Edit Product</h1>
-            <p>Update product details and images</p>
+            <p>Update product details and manage images</p>
         </div>
 
         <div class="content">
             <div id="loading" class="loading">
+                <div class="spinner"></div>
                 <h3>Loading product details...</h3>
             </div>
 
@@ -409,12 +536,65 @@
             </div>
 
             <form id="editForm" class="hidden">
-                <div class="form-group">
-                    <label for="productName">Product Name *</label>
-                    <input type="text" id="productName" name="name" required>
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3>Basic Information</h3>
+                    <div class="form-group">
+                        <label for="productName">Product Name *</label>
+                        <input type="text" id="productName" name="name" required placeholder="Enter product name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="4" placeholder="Enter product description"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="price">Price (₹) *</label>
+                            <input type="number" id="price" name="price" step="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label for="originalPrice">Original Price (₹)</label>
+                            <input type="number" id="originalPrice" name="originalPrice" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category *</label>
+                            <select id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="Marvel">Marvel</option>
+                                <option value="DC Comics">DC Comics</option>
+                                <option value="Anime">Anime</option>
+                                <option value="Tollywood">Tollywood</option>
+                                <option value="Star Wars">Star Wars</option>
+                                <option value="Harry Potter">Harry Potter</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="printType">Print Type</label>
+                            <select id="printType" name="printType">
+                                <option value="Digital Print">Digital Print</option>
+                                <option value="Canvas">Canvas</option>
+                                <option value="Framed">Framed</option>
+                                <option value="Sticker">Sticker</option>
+                                <option value="T-Shirt">T-Shirt</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tags">Tags (comma-separated)</label>
+                        <input type="text" id="tags" name="tags" placeholder="e.g., poster, limited, exclusive">
+                    </div>
                 </div>
 
-                <div class="artist-section">
+                <!-- Artist Information -->
+                <div class="form-section">
                     <h3>Artist Information</h3>
                     <div class="form-group">
                         <label for="artistSelect">Select Artist *</label>
@@ -423,11 +603,9 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="addNewArtist" name="addNewArtist">
-                            Change to New Artist
-                        </label>
+                    <div class="checkbox-group" onclick="toggleNewArtist()">
+                        <input type="checkbox" id="addNewArtist" name="addNewArtist">
+                        <label for="addNewArtist">Change to New Artist</label>
                     </div>
 
                     <div class="form-group hidden" id="newArtistFields">
@@ -436,132 +614,89 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="3"></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="price">Price (₹) *</label>
-                        <input type="number" id="price" name="price" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="originalPrice">Original Price (₹)</label>
-                        <input type="number" id="originalPrice" name="originalPrice" step="0.01">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="category">Category *</label>
-                        <select id="category" name="category" required>
-                            <option value="">Select Category</option>
-                            <option value="Marvel">Marvel</option>
-                            <option value="DC Comics">DC Comics</option>
-                            <option value="Anime">Anime</option>
-                            <option value="Tollywood">Tollywood</option>
-                            <option value="Star Wars">Star Wars</option>
-                            <option value="Harry Potter">Harry Potter</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="printType">Print Type</label>
-                        <select id="printType" name="printType">
-                            <option value="Digital Print">Digital Print</option>
-                            <option value="Canvas">Canvas</option>
-                            <option value="Framed">Framed</option>
-                            <option value="Sticker">Sticker</option>
-                            <option value="T-Shirt">T-Shirt</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="tags">Tags (comma-separated)</label>
-                    <input type="text" id="tags" name="tags" placeholder="e.g., poster, limited, exclusive">
-                </div>
-
-                <div class="form-group">
-                    <label class="checkbox-group">
+                <!-- Limited Edition -->
+                <div class="form-section">
+                    <h3>Limited Edition Settings</h3>
+                    <div class="checkbox-group" onclick="toggleLimitedEdition()">
                         <input type="checkbox" id="isLimitedEdition" name="isLimitedEdition">
-                        Limited Edition
-                    </label>
-                </div>
+                        <label for="isLimitedEdition">Limited Edition Product</label>
+                    </div>
 
-                <div id="limitedEditionFields" class="hidden">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="totalCopies">Total Copies</label>
-                            <input type="number" id="totalCopies" name="totalCopies" min="1">
+                    <div id="limitedEditionFields" class="hidden">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="totalCopies">Total Copies</label>
+                                <input type="number" id="totalCopies" name="totalCopies" min="1" placeholder="Enter total copies">
+                            </div>
+                            <div class="form-group">
+                                <label for="endDate">End Date</label>
+                                <input type="date" id="endDate" name="endDate">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="endDate">End Date</label>
-                            <input type="date" id="endDate" name="endDate">
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="soldCopies">Sold Copies</label>
+                                <input type="number" id="soldCopies" name="soldCopies" min="0" readonly>
+                                <small style="color: #6b7280; font-size: 0.875rem;">Automatically updated when customers purchase</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="remainingCopies">Remaining Copies</label>
+                                <input type="number" id="remainingCopies" name="remainingCopies" readonly>
+                                <small style="color: #6b7280; font-size: 0.875rem;">Calculated automatically</small>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="soldCopies">Sold Copies</label>
-                            <input type="number" id="soldCopies" name="soldCopies" min="0" readonly>
-                            <small style="color: #666;">This field is automatically updated when customers purchase</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="remainingCopies">Remaining Copies</label>
-                            <input type="number" id="remainingCopies" name="remainingCopies" readonly>
-                            <small style="color: #666;">Calculated automatically</small>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="checkbox-group">
+                        
+                        <div class="checkbox-group" onclick="toggleSoldOut()">
                             <input type="checkbox" id="isSoldOut" name="isSoldOut">
-                            Mark as Sold Out
-                        </label>
-                        <small style="color: #666;">Check this to manually mark as sold out</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="waitlistCount">Waitlist Count</label>
-                        <input type="number" id="waitlistCount" name="waitlistCount" readonly>
-                        <small style="color: #666;">Number of emails on waitlist</small>
-                    </div>
-                </div>
-
-                <div class="current-images">
-                    <h3>Current Images</h3>
-                    <div id="currentImagesGrid" class="preview-images">
-                        <!-- Current images will be loaded here -->
+                            <label for="isSoldOut">Mark as Sold Out</label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="waitlistCount">Waitlist Count</label>
+                            <input type="number" id="waitlistCount" name="waitlistCount" readonly>
+                            <small style="color: #6b7280; font-size: 0.875rem;">Number of emails on waitlist</small>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Add New Images</label>
-                    <div class="file-upload" id="fileUploadArea">
-                        <p>Click to select additional images (up to 5)</p>
-                        <input type="file" id="newImages" name="newImages" multiple accept="image/*" style="display: none;">
-                        <!-- Simple direct file input for mobile -->
-                        <input type="file" id="mobileFileInput" name="mobileImages" multiple accept="image/*" style="display: block; margin-top: 10px; padding: 10px; border: 2px dashed #667eea; border-radius: 5px; width: 100%; font-size: 16px;">
-                        <!-- Mobile-friendly fallback button -->
-                        <button type="button" id="mobileFileButton" style="display: none; margin-top: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; font-size: 16px;">
-                            📱 Select Images (Mobile)
-                        </button>
-                        <!-- Debug button for testing -->
-                        <button type="button" id="debugFileButton" style="margin-top: 10px; padding: 10px 20px; background: #ff6b6b; color: white; border: none; border-radius: 5px; font-size: 16px;">
-                            🔧 Debug: Direct File Select
-                        </button>
+                <!-- Image Management -->
+                <div class="image-upload-section">
+                    <div class="current-images">
+                        <h3>Current Images</h3>
+                        <div id="currentImagesGrid" class="image-grid">
+                            <!-- Current images will be loaded here -->
+                        </div>
                     </div>
-                    <div id="newImagesPreview" class="preview-images">
-                        <!-- New image previews will be shown here -->
+
+                    <div class="form-section">
+                        <h3>Add New Images</h3>
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">📸</div>
+                            <div class="upload-text">Click to select images or drag & drop</div>
+                            <div class="upload-subtext">Supports JPG, PNG, GIF up to 5MB each (max 5 images)</div>
+                            <input type="file" id="imageInput" name="images" multiple accept="image/*">
+                            <div class="upload-progress" id="uploadProgress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="newImagesPreview" class="image-grid">
+                            <!-- New image previews will be shown here -->
+                        </div>
                     </div>
                 </div>
 
-                <div style="margin-top: 30px; display: flex; gap: 15px;">
-                    <button type="submit" class="btn btn-primary">Update Product</button>
-                    <button type="button" onclick="window.close()" class="btn btn-secondary">Cancel</button>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">
+                        <span>💾</span>
+                        Update Product
+                    </button>
+                    <button type="button" onclick="window.close()" class="btn btn-secondary">
+                        <span>❌</span>
+                        Cancel
+                    </button>
                 </div>
             </form>
         </div>
@@ -571,6 +706,7 @@
         const API_BASE = window.location.origin + '/api';
         let currentProduct = null;
         let currentImages = [];
+        let newImageFiles = [];
 
         // Get product ID from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -661,14 +797,22 @@
             const grid = document.getElementById('currentImagesGrid');
             grid.innerHTML = '';
             
+            if (currentImages.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #6b7280; padding: 40px;">No images uploaded yet</div>';
+                return;
+            }
+            
             currentImages.forEach((image, index) => {
                 const div = document.createElement('div');
-                div.className = 'preview-image';
-                // Handle both Firebase Storage URLs and local URLs
+                div.className = 'image-item';
                 const imageUrl = image.url || image;
                 div.innerHTML = `
-                    <img src="${imageUrl}" alt="Product image ${index + 1}">
-                    <button type="button" class="remove-image" onclick="removeCurrentImage(${index})">×</button>
+                    <img src="${imageUrl}" alt="Product image ${index + 1}" loading="lazy">
+                    <div class="image-actions">
+                        <button type="button" class="image-action-btn delete" onclick="removeCurrentImage(${index})" title="Remove image">
+                            🗑️
+                        </button>
+                    </div>
                 `;
                 grid.appendChild(div);
             });
@@ -682,19 +826,15 @@
             }
         }
 
-        // Toggle limited edition fields
-        function toggleLimitedEditionFields() {
-            const isLimited = document.getElementById('isLimitedEdition').checked;
-            const fields = document.getElementById('limitedEditionFields');
-            fields.classList.toggle('hidden', !isLimited);
-        }
-
-        // New artist toggle
-        document.getElementById('addNewArtist').addEventListener('change', function(e) {
+        // Toggle functions
+        function toggleNewArtist() {
+            const checkbox = document.getElementById('addNewArtist');
+            checkbox.checked = !checkbox.checked;
+            
             const artistSelect = document.getElementById('artistSelect');
             const newArtistFields = document.getElementById('newArtistFields');
             
-            if (e.target.checked) {
+            if (checkbox.checked) {
                 artistSelect.disabled = true;
                 artistSelect.required = false;
                 newArtistFields.classList.remove('hidden');
@@ -705,215 +845,133 @@
                 newArtistFields.classList.add('hidden');
                 document.getElementById('newArtistName').required = false;
             }
-        });
-
-        // Limited edition toggle
-        document.getElementById('isLimitedEdition').addEventListener('change', toggleLimitedEditionFields);
-
-                    // New images preview (for both file inputs)
-            function handleFileSelection(e) {
-                const preview = document.getElementById('newImagesPreview');
-                preview.innerHTML = '';
-                
-                console.log('File input change event triggered');
-                console.log('Files selected:', e.target.files ? e.target.files.length : 0);
-                
-                if (e.target.files && e.target.files.length > 0) {
-                    console.log('New files selected:', e.target.files.length);
-                    
-                    Array.from(e.target.files).forEach((file, index) => {
-                        console.log('Processing new file:', file.name, 'Size:', file.size, 'Type:', file.type);
-                        
-                        // Validate file type
-                        if (!file.type.startsWith('image/')) {
-                            console.error('Invalid file type:', file.type);
-                            alert('Please select only image files (JPEG, PNG, GIF, etc.)');
-                            return;
-                        }
-                        
-                        // Validate file size (5MB limit)
-                        if (file.size > 5 * 1024 * 1024) {
-                            console.error('File too large:', file.name, file.size);
-                            alert(`File "${file.name}" is too large. Please select files smaller than 5MB.`);
-                            return;
-                        }
-                        
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const div = document.createElement('div');
-                            div.className = 'preview-image';
-                            div.innerHTML = `
-                                <img src="${e.target.result}" alt="New image preview">
-                            `;
-                            preview.appendChild(div);
-                            console.log('Image preview added for:', file.name);
-                        };
-                        reader.onerror = function() {
-                            console.error('Error reading file:', file.name);
-                            alert(`Error reading file "${file.name}". Please try again.`);
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                } else {
-                    console.log('No new files selected');
-                }
-            }
-
-            // Add event listeners for both file inputs
-            document.getElementById('newImages').addEventListener('change', handleFileSelection);
-            document.getElementById('mobileFileInput').addEventListener('change', handleFileSelection);
-
-        // Cross-device file upload handling
-        const newImagesUploadArea = document.getElementById('fileUploadArea');
-        const mobileFileButton = document.getElementById('mobileFileButton');
-        const debugFileButton = document.getElementById('debugFileButton');
-        const fileInput = document.getElementById('newImages');
-        const mobileFileInput = document.getElementById('mobileFileInput');
-        
-        if (newImagesUploadArea && fileInput && mobileFileInput) {
-            // Detect device type
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isAndroid = /Android/.test(navigator.userAgent);
-            
-            console.log('Edit page - Device detected:', { isMobile, isIOS, isAndroid });
-            
-            // Function to trigger file selection
-            function triggerFileSelection() {
-                console.log('Triggering file selection...');
-                try {
-                    // Try multiple approaches for mobile compatibility
-                    if (isMobile) {
-                        // For mobile, try to focus first, then click
-                        fileInput.focus();
-                        setTimeout(() => {
-                            fileInput.click();
-                        }, 50);
-                    } else {
-                        // For desktop, direct click
-                        fileInput.click();
-                    }
-                } catch (error) {
-                    console.error('Error triggering file selection:', error);
-                    // Fallback: show mobile button
-                    if (mobileFileButton) {
-                        mobileFileButton.style.display = 'block';
-                    }
-                }
-            }
-            
-            // Show mobile button for iOS devices
-            if (isIOS && mobileFileButton) {
-                mobileFileButton.style.display = 'block';
-                mobileFileButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Mobile file button clicked');
-                    triggerFileSelection();
-                });
-            }
-            
-            // Debug button for testing
-            if (debugFileButton) {
-                debugFileButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Debug file button clicked');
-                    console.log('File input element:', fileInput);
-                    console.log('File input properties:', {
-                        display: window.getComputedStyle(fileInput).display,
-                        visibility: window.getComputedStyle(fileInput).visibility,
-                        position: window.getComputedStyle(fileInput).position,
-                        opacity: window.getComputedStyle(fileInput).opacity,
-                        zIndex: window.getComputedStyle(fileInput).zIndex
-                    });
-                    
-                    // Try direct click
-                    try {
-                        fileInput.click();
-                        console.log('Direct file input click executed');
-                    } catch (error) {
-                        console.error('Direct file input click failed:', error);
-                    }
-                });
-            }
-            
-            // Universal click handler
-            newImagesUploadArea.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('File upload area clicked');
-                triggerFileSelection();
-            });
-            
-            // Touch-specific handling for mobile
-            if (isMobile) {
-                let touchStartTime = 0;
-                let touchStartY = 0;
-                
-                newImagesUploadArea.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    touchStartTime = Date.now();
-                    touchStartY = e.touches[0].clientY;
-                    console.log('Touch start on file upload area');
-                    this.style.backgroundColor = '#e8ecff';
-                }, { passive: false });
-                
-                newImagesUploadArea.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const touchEndTime = Date.now();
-                    const touchDuration = touchEndTime - touchStartTime;
-                    const touchEndY = e.changedTouches[0].clientY;
-                    const touchDistance = Math.abs(touchEndY - touchStartY);
-                    
-                    console.log('Touch end on file upload area', { touchDuration, touchDistance });
-                    this.style.backgroundColor = '';
-                    
-                    // Only trigger if it's a short tap (not a scroll)
-                    if (touchDuration < 300 && touchDistance < 10) {
-                        setTimeout(() => {
-                            triggerFileSelection();
-                        }, 100);
-                    }
-                }, { passive: false });
-                
-                // Prevent context menu on long press
-                newImagesUploadArea.addEventListener('contextmenu', function(e) {
-                    e.preventDefault();
-                });
-                
-                // Prevent default touch behaviors
-                newImagesUploadArea.addEventListener('touchmove', function(e) {
-                    e.preventDefault();
-                }, { passive: false });
-            }
-            
-            // Test file input accessibility
-            setTimeout(() => {
-                console.log('File input element:', fileInput);
-                console.log('File input display style:', window.getComputedStyle(fileInput).display);
-                console.log('File input visibility:', window.getComputedStyle(fileInput).visibility);
-                console.log('File input position:', window.getComputedStyle(fileInput).position);
-            }, 1000);
         }
 
-        // Cross-device form handling
-        document.addEventListener('DOMContentLoaded', function() {
-            // Prevent zoom on input focus for iOS
-            const inputs = document.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                        // Small delay to prevent zoom
-                        setTimeout(() => {
-                            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 300);
-                    }
-                });
-            });
+        function toggleLimitedEdition() {
+            const checkbox = document.getElementById('isLimitedEdition');
+            checkbox.checked = !checkbox.checked;
+            toggleLimitedEditionFields();
+        }
+
+        function toggleSoldOut() {
+            const checkbox = document.getElementById('isSoldOut');
+            checkbox.checked = !checkbox.checked;
+        }
+
+        function toggleLimitedEditionFields() {
+            const isLimited = document.getElementById('isLimitedEdition').checked;
+            const fields = document.getElementById('limitedEditionFields');
+            fields.classList.toggle('hidden', !isLimited);
+        }
+
+        // Modern Image Upload Handling
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const newImagesPreview = document.getElementById('newImagesPreview');
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            imageInput.click();
         });
+
+        // File selection handler
+        imageInput.addEventListener('change', handleFileSelection);
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = Array.from(e.dataTransfer.files);
+            handleFiles(files);
+        });
+
+        // File selection handler
+        function handleFileSelection(e) {
+            const files = Array.from(e.target.files);
+            handleFiles(files);
+        }
+
+        // Handle selected files
+        function handleFiles(files) {
+            // Clear previous previews
+            newImagesPreview.innerHTML = '';
+            newImageFiles = [];
+
+            // Validate number of files
+            if (files.length > 5) {
+                showError('Maximum 5 images allowed');
+                return;
+            }
+
+            // Validate each file
+            files.forEach((file, index) => {
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    showError(`File "${file.name}" is not an image`);
+                    return;
+                }
+
+                // Check file size (5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    showError(`File "${file.name}" is too large. Maximum size is 5MB`);
+                    return;
+                }
+
+                // Add to files array
+                newImageFiles.push(file);
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'image-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="New image preview">
+                        <div class="image-actions">
+                            <button type="button" class="image-action-btn delete" onclick="removeNewImage(${index})" title="Remove image">
+                                🗑️
+                            </button>
+                        </div>
+                    `;
+                    newImagesPreview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Remove new image
+        function removeNewImage(index) {
+            newImageFiles.splice(index, 1);
+            // Recreate previews
+            newImagesPreview.innerHTML = '';
+            newImageFiles.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'image-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="New image preview">
+                        <div class="image-actions">
+                            <button type="button" class="image-action-btn delete" onclick="removeNewImage(${idx})" title="Remove image">
+                                🗑️
+                            </button>
+                        </div>
+                    `;
+                    newImagesPreview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
 
         // Form submission
         document.getElementById('editForm').addEventListener('submit', async function(e) {
@@ -951,43 +1009,18 @@
             // Add current images (after removals)
             formData.append('currentImages', JSON.stringify(currentImages));
             
-            // Add new images from both file inputs
-            const imageFiles = document.getElementById('newImages').files;
-            const mobileImageFiles = document.getElementById('mobileFileInput').files;
-            
-            console.log('New image files to upload:', imageFiles.length);
-            console.log('Mobile image files to upload:', mobileImageFiles.length);
-            
-            // Combine files from both inputs
-            const allImageFiles = [...Array.from(imageFiles), ...Array.from(mobileImageFiles)];
-            console.log('Total image files to upload:', allImageFiles.length);
-            
-            if (allImageFiles.length > 0) {
-                allImageFiles.forEach((file, index) => {
-                    console.log(`Adding file ${index + 1}:`, file.name, file.size, file.type);
-                    formData.append('images', file);
-                });
-            } else {
-                console.log('No new image files to upload');
-            }
+            // Add new images
+            newImageFiles.forEach((file, index) => {
+                formData.append('images', file);
+            });
             
             try {
-                console.log('Submitting form data...');
-                console.log('FormData entries:');
-                for (let [key, value] of formData.entries()) {
-                    console.log(key, value);
-                }
-                
                 const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
                     method: 'PUT',
                     body: formData
                 });
                 
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
-                
                 const result = await response.json();
-                console.log('Response data:', result);
                 
                 if (response.ok) {
                     showSuccess('Product updated successfully!');
