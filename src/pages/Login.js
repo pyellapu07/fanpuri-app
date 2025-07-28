@@ -29,9 +29,18 @@ const Login = () => {
         uid: result.user.uid
       });
       
-      if (isNewUser) {
+      console.log('🔍 Full result object:', result);
+      console.log('🔍 additionalUserInfo:', result.additionalUserInfo);
+      
+      // For now, let's send email for all users to test the system
+      // We can refine this later to only send for truly new users
+      const shouldSendEmail = true; // isNewUser || true;
+      
+      if (shouldSendEmail) {
         // Send registration data to backend for welcome email
         try {
+          console.log('📡 Attempting to call backend registration API...');
+          
           const response = await fetch('http://localhost:5000/api/auth/register', {
             method: 'POST',
             headers: {
@@ -46,6 +55,8 @@ const Login = () => {
             }),
           });
           
+          console.log('📡 Backend response status:', response.status);
+          
           if (response.ok) {
             const data = await response.json();
             console.log('✅ User registered successfully:', data.message);
@@ -53,10 +64,12 @@ const Login = () => {
               console.log('📧 Welcome email sent!');
             }
           } else {
-            console.warn('⚠️ Registration API call failed, but login succeeded');
+            const errorData = await response.text();
+            console.error('❌ Registration API call failed:', response.status, errorData);
           }
         } catch (regError) {
-          console.warn('⚠️ Registration API call failed, but login succeeded:', regError);
+          console.error('❌ Registration API call failed with error:', regError);
+          console.error('❌ Error details:', regError.message);
           // Don't fail the login if registration API fails
         }
       }
