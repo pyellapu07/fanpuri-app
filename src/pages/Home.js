@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Favorite,
+  FavoriteBorder,
   LocalOffer,
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
@@ -510,13 +511,21 @@ const Home = () => {
                         },
                       }}
                     >
-                      <Favorite 
-                        fontSize="medium" 
-                        sx={{ 
-                          color: isInFavorites(product.id) ? '#e74c3c' : '#666',
-                          fill: isInFavorites(product.id) ? '#e74c3c' : 'none',
-                        }} 
-                      />
+                      {isInFavorites(product.id) ? (
+                        <Favorite 
+                          fontSize="medium" 
+                          sx={{ 
+                            color: '#e74c3c',
+                          }} 
+                        />
+                      ) : (
+                        <FavoriteBorder 
+                          fontSize="medium" 
+                          sx={{ 
+                            color: '#000',
+                          }} 
+                        />
+                      )}
                     </IconButton>
                     {/* Category Badge - Removed to make room for Limited Edition Banner */}
 
