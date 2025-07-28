@@ -454,108 +454,118 @@ const ProductDetail = () => {
       </Breadcrumbs>
         </Box>
 
-        {/* Product Images - Full Width */}
-        <Box sx={{ width: '100%', mb: 0 }}>
-          {/* Main Product Image */}
-          <Box 
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            sx={{ 
-              position: 'relative', 
-              width: '100%',
-              height: { xs: '400px', sm: '500px', md: '600px' },
-              borderRadius: '8px',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              touchAction: 'pan-y',
-              mb: 2
-            }}
-          >
-            <Box
-              component="img"
-              src={product.images[selectedImage]}
-              alt={product.name}
-              sx={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                transition: 'opacity 0.3s ease',
-              }}
-            />
-            
-            {/* Wishlist Icon */}
-            <IconButton
-              onClick={handleWishlist}
-              sx={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                bgcolor: 'rgba(255,255,255,0.9)',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,1)',
-                },
-              }}
-            >
-              {isWishlisted ? <Favorite color="error" /> : <FavoriteBorder />}
-            </IconButton>
-
-            {/* Image Navigation Dots (All devices) */}
-            {product.images.length > 1 && (
+        <Grid container spacing={0}>
+          {/* Product Images - Left Side */}
+          <Grid xs={12} md={6} sx={{ p: { xs: 1, md: 4 } }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', width: '100%' }}>
+              {/* Thumbnail Images - Left Side (Hidden on Mobile) */}
               <Box sx={{ 
-                display: 'flex',
-                position: 'absolute',
-                bottom: 16,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                gap: 1
+                display: { xs: 'none', md: 'flex' }, 
+                flexDirection: 'column', 
+                gap: 1 
               }}>
-                {product.images.map((_, index) => (
+                {product.images.map((image, index) => (
                   <Box
                     key={index}
+                    component="img"
+                    src={image}
+                    alt={`${product.name} ${index + 1}`}
                     onClick={() => setSelectedImage(index)}
                     sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      bgcolor: selectedImage === index ? '#000' : 'rgba(255,255,255,0.5)',
+                      width: 80,
+                      height: 80,
+                      objectFit: 'cover',
+                      borderRadius: '4px',
                       cursor: 'pointer',
+                      border: selectedImage === index ? '2px solid #000' : '1px solid #e0e0e0',
                       transition: 'all 0.2s ease',
                       '&:hover': {
-                        bgcolor: selectedImage === index ? '#000' : 'rgba(255,255,255,0.8)',
+                        borderColor: '#000',
                       },
                     }}
                   />
                 ))}
               </Box>
-            )}
-          </Box>
 
-          {/* Download Full Size Image Link */}
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Link
-              href={product.images[selectedImage]}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                color: '#1976d2',
-                textDecoration: 'underline',
-                fontSize: '14px',
-                cursor: 'pointer',
-                '&:hover': {
-                  color: '#1565c0',
-                },
-              }}
-            >
-              Download full size image
-            </Link>
-          </Box>
-        </Box>
+              {/* Main Product Image - Right Side */}
+              <Box 
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                sx={{ 
+                  position: 'relative', 
+                  flex: 1,
+                  width: { xs: '100%', md: '700px' },
+                  height: { xs: '400px', md: '600px' },
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  touchAction: 'pan-y'
+                }}
+              >
+                <Box
+                  component="img"
+                  src={product.images[selectedImage]}
+                  alt={product.name}
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    transition: 'opacity 0.3s ease',
+                  }}
+                />
+                
+                {/* Wishlist Icon */}
+                <IconButton
+                  onClick={handleWishlist}
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    bgcolor: 'rgba(255,255,255,0.9)',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,1)',
+                    },
+                  }}
+                >
+                  {isWishlisted ? <Favorite color="error" /> : <FavoriteBorder />}
+                </IconButton>
 
-        {/* Product Info - Below Image */}
-        <Box sx={{ px: { xs: 2, md: 4 } }}>
+                {/* Mobile Image Navigation Dots */}
+                <Box sx={{ 
+                  display: { xs: 'flex', md: 'none' },
+                  position: 'absolute',
+                  bottom: 16,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  gap: 1
+                }}>
+                  {product.images.map((_, index) => (
+                    <Box
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: selectedImage === index ? '#000' : 'rgba(255,255,255,0.5)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          bgcolor: selectedImage === index ? '#000' : 'rgba(255,255,255,0.8)',
+                        },
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Product Info - Right Side */}
+          <Grid xs={12} md={6} sx={{ p: { xs: 1, md: 4 } }}>
           <Box>
               {/* Fandom Badge */}
             <Chip
@@ -1009,7 +1019,8 @@ const ProductDetail = () => {
               </Box>
             </Card>
           </Box>
-        </Box>
+        </Grid>
+      </Grid>
       
       {/* Login/Signup Dialog */}
       <Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
