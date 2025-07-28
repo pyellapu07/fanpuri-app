@@ -21,7 +21,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Favorite,
-  FavoriteBorder,
   LocalOffer,
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
@@ -83,13 +82,11 @@ const Home = () => {
           console.log('Raw product from backend:', product); // Debug log
           // Get artist name from populated artist object
           const artistName = product.artist?.name || 'Unknown Artist';
-          const isArtistVerified = product.artist?.isVerified || false;
           
           return {
             id: product.id,
             name: product.name || 'Untitled Product',
             artist: artistName,
-            isArtistVerified: isArtistVerified,
             price: product.price,
             originalPrice: product.originalPrice,
             image: product.images && product.images.length > 0 ? product.images[0].url : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop',
@@ -505,35 +502,21 @@ const Home = () => {
                       }}
                       sx={{
                         position: 'absolute',
-                            top: 12,
-                            right: 12,
-                            bgcolor: 'rgba(255,255,255,0.95)',
-                        zIndex: 10,
-                        width: 40,
-                        height: 40,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                        top: 12,
+                        right: 12,
+                        bgcolor: 'rgba(255,255,255,0.95)',
                         '&:hover': {
                           bgcolor: 'rgba(255,255,255,1)',
-                          transform: 'scale(1.05)',
                         },
-                        transition: 'all 0.2s ease',
                       }}
                     >
-                      {isInFavorites(product.id) ? (
-                        <Favorite 
-                          sx={{ 
-                            color: '#e74c3c',
-                            fontSize: '20px',
-                          }} 
-                        />
-                      ) : (
-                        <FavoriteBorder 
-                          sx={{ 
-                            color: '#000',
-                            fontSize: '20px',
-                          }} 
-                        />
-                      )}
+                      <Favorite 
+                        fontSize="medium" 
+                        sx={{ 
+                          color: isInFavorites(product.id) ? '#e74c3c' : '#666',
+                          fill: isInFavorites(product.id) ? '#e74c3c' : 'none',
+                        }} 
+                      />
                     </IconButton>
                     {/* Category Badge - Removed to make room for Limited Edition Banner */}
 
@@ -542,8 +525,8 @@ const Home = () => {
                       <>
                         {/* Custom Limited Edition Banner */}
                         <Box
-                      sx={{
-                        position: 'absolute',
+                          sx={{
+                            position: 'absolute',
                             top: 0,
                             left: '8px',
                             zIndex: 2,
@@ -620,12 +603,12 @@ const Home = () => {
                             <Box
                               sx={{
                                 bgcolor: '#d32f2f',
-                            color: 'white',
+                                color: 'white',
                                 px: 3,
                                 py: 1.5,
                                 borderRadius: '8px',
                                 fontSize: '1rem',
-                            fontWeight: 700,
+                                fontWeight: 700,
                                 textTransform: 'uppercase',
                                 letterSpacing: '1px',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
@@ -662,7 +645,6 @@ const Home = () => {
                           justifyContent: 'space-between'
                         }}>
                           {/* Artist Name - Above Title in CAPS */}
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <Typography 
                       variant="caption" 
                       color="text.secondary" 
@@ -678,18 +660,6 @@ const Home = () => {
                           >
                             {product.artist}
                     </Typography>
-                            {product.isArtistVerified && (
-                                                              <img
-                                  src="/assets/verified_24dp_1976D2_FILL1_wght400_GRAD0_opsz24.svg"
-                                  alt="Verified Artist"
-                                  style={{
-                                    width: '12px',
-                                    height: '12px',
-                                    marginBottom: '2px'
-                                  }}
-                                />
-                            )}
-                          </Box>
 
                           {/* Product Name - Larger */}
                     <Typography 

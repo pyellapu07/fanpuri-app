@@ -443,12 +443,12 @@ const Shop = () => {
                   }}
                 >
                   <Box sx={{ position: 'relative' }}>
-                    <CardMedia
-                      component="img"
-                      height="300"
-                      image={product.image}
-                      alt={product.name}
-                    />
+                  <CardMedia
+                    component="img"
+                    height="300"
+                    image={product.image}
+                    alt={product.name}
+                  />
                     
                     {/* Limited Edition Banner */}
                     {product.isLimitedEdition && (
@@ -556,7 +556,7 @@ const Shop = () => {
                   <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', mb: 1 }}>
                       <IconButton 
-                        size="small" 
+                        size="small"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -620,8 +620,8 @@ const Shop = () => {
                     
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                       <Typography variant="body2" color="text.secondary">
-                        by {product.artist}
-                      </Typography>
+                      by {product.artist}
+                    </Typography>
                       {product.isArtistVerified && (
                                                   <img
                             src="/assets/verified_24dp_1976D2_FILL1_wght400_GRAD0_opsz24.svg"
@@ -681,10 +681,10 @@ const Shop = () => {
                           SOLD OUT
                         </Button>
                       ) : (
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<ShoppingCart />}
+                      <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<ShoppingCart />}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -694,9 +694,9 @@ const Shop = () => {
                               addToCart(product);
                             }
                           }}
-                        >
-                          Add to Cart
-                        </Button>
+                      >
+                        Add to Cart
+                      </Button>
                       )}
                     </Box>
                   </CardContent>

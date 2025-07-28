@@ -178,10 +178,10 @@ const Favorites = () => {
                 const cartItem = getCartItem(product.id);
                 return (
                   <Box key={product.id}>
-                    <Card
+                <Card
                       component={Link}
                       to={`/product/${product.id}`}
-                      sx={{
+                  sx={{
                         textDecoration: 'none',
                         height: { xs: 420, sm: 460 }, // Increased height to fit 2 lines
                         width: '100%',
@@ -192,24 +192,24 @@ const Favorites = () => {
                         overflow: 'hidden',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)', // Lighter shadow
                         border: '1px solid #e0e0e0',
-                        display: 'flex',
-                        flexDirection: 'column',
+                    display: 'flex',
+                    flexDirection: 'column',
                         bgcolor: 'white',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
                           borderColor: '#ccc',
-                        },
-                      }}
-                    >
+                    },
+                  }}
+                >
                       {/* Product Image - Funko Style */}
                       <Box sx={{ position: 'relative', height: { xs: 220, sm: 260 }, width: '100%' }}>
-                        <CardMedia
-                          component="img"
+                    <CardMedia
+                      component="img"
                           height="100%"
                           width="100%"
-                          image={product.image}
-                          alt={product.name}
+                      image={product.image}
+                      alt={product.name}
                           sx={{ 
                             objectFit: 'cover',
                             height: '100%',
@@ -217,17 +217,17 @@ const Favorites = () => {
                             minWidth: '100%',
                             maxWidth: '100%',
                           }}
-                        />
+                    />
                         
                         {/* Remove from favorites button - Same as Cart page */}
-                        <IconButton
+                    <IconButton
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             handleRemoveFromFavorites(product.id);
                           }}
-                          sx={{
-                            position: 'absolute',
+                      sx={{
+                        position: 'absolute',
                             top: 12,
                             right: 12,
                             bgcolor: 'rgba(255,255,255,0.95)',
@@ -235,13 +235,13 @@ const Favorites = () => {
                             width: 40,
                             height: 40,
                             boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                            '&:hover': {
-                              bgcolor: 'rgba(255,255,255,1)',
+                        '&:hover': {
+                          bgcolor: 'rgba(255,255,255,1)',
                               transform: 'scale(1.05)',
-                            },
+                        },
                             transition: 'all 0.2s ease',
-                          }}
-                        >
+                      }}
+                    >
                           <img 
                             src="/assets/delete_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
                             alt="Delete"
@@ -250,7 +250,7 @@ const Favorites = () => {
                               height: '20px'
                             }}
                           />
-                        </IconButton>
+                    </IconButton>
 
                         {/* Limited Edition Banner */}
                         {product.isLimitedEdition && (
@@ -352,8 +352,8 @@ const Favorites = () => {
                             )}
                           </>
                         )}
-                      </Box>
-                      
+                  </Box>
+
                       {/* Product Details - Funko Style */}
                       <CardContent sx={{ 
                         p: { xs: 1.5, sm: 2 }, // Tighter padding on mobile
@@ -390,7 +390,7 @@ const Favorites = () => {
                               }}
                             >
                               {typeof product.artist === 'object' ? product.artist?.name || 'Unknown Artist' : product.artist || 'Unknown Artist'}
-                            </Typography>
+                    </Typography>
                             {product.isArtistVerified && (
                                                               <img
                                   src="/assets/verified_24dp_1976D2_FILL1_wght400_GRAD0_opsz24.svg"
@@ -405,26 +405,26 @@ const Favorites = () => {
                           </Box>
 
                           {/* Product Name - Larger */}
-                          <Typography 
-                            variant="h6" 
-                            component="h3" 
-                            sx={{ 
-                              fontWeight: 700,
+                    <Typography
+                      variant="h6"
+                      component="h3"
+                      sx={{
+                        fontWeight: 700,
                               fontSize: { xs: '1rem', sm: '1.1rem' },
                               lineHeight: 1.3,
                               mb: 0.25,
                               flexGrow: 1, // Take available space in fixed container
-                              overflow: 'hidden',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
                               color: '#000',
                               textAlign: 'left',
-                            }}
-                          >
+                      }}
+                    >
                             {product.name || 'Untitled Product'}
-                          </Typography>
-
+                    </Typography>
+                    
                           {/* Limited Stock Indicator - Below Product Title */}
                           {product.isLimitedEdition && !product.isSoldOut && product.remainingCopies > 0 && product.remainingCopies <= 10 && (
                             <Typography
@@ -455,8 +455,8 @@ const Favorites = () => {
                                 color: '#000',
                               }}
                             >
-                              ₹{product.price}
-                            </Typography>
+                      ₹{product.price}
+                    </Typography>
                             {product.originalPrice && product.originalPrice > product.price && (
                               <Typography 
                                 variant="body2" 
@@ -475,17 +475,17 @@ const Favorites = () => {
 
                         {/* Add to Cart Button - Same as Home.js */}
                         {cartItem ? (
-                          <Button
+                      <Button
                             variant="contained"
-                            fullWidth
+                        fullWidth
                             size="large"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                             }}
-                            sx={{
-                              bgcolor: '#000',
-                              color: '#fff',
+                        sx={{
+                            bgcolor: '#000',
+                            color: '#fff',
                               borderRadius: '50px',
                               fontWeight: 700,
                               fontSize: '0.8rem',
@@ -535,9 +535,9 @@ const Favorites = () => {
                                 },
                                 '& .MuiSvgIcon-root': {
                                   color: 'white',
-                                },
-                              }}
-                            >
+                          },
+                        }}
+                      >
                               {[...Array(12)].map((_, i) => (
                                 <MenuItem 
                                   key={i + 1} 
@@ -552,14 +552,14 @@ const Favorites = () => {
                                 </MenuItem>
                               ))}
                             </Select>
-                          </Button>
+                      </Button>
                         ) : product.isSoldOut ? (
-                          <Button
-                            variant="contained"
-                            fullWidth
+                      <Button
+                        variant="contained"
+                        fullWidth
                             size="large"
                             disabled
-                            sx={{
+                        sx={{
                               bgcolor: '#9e9e9e',
                               color: 'white',
                               textTransform: 'uppercase',
@@ -570,11 +570,11 @@ const Favorites = () => {
                               letterSpacing: '0.5px',
                               boxShadow: 'none',
                               cursor: 'not-allowed',
-                              '&:hover': {
+                          '&:hover': {
                                 bgcolor: '#9e9e9e',
-                              },
-                            }}
-                          >
+                          },
+                        }}
+                      >
                             SOLD OUT
                           </Button>
                         ) : (
@@ -649,12 +649,12 @@ const Favorites = () => {
                             </Box>
                             {/* Button Text */}
                             <Box sx={{ position: 'relative', zIndex: 2 }}>
-                              Add to Cart
+                        Add to Cart
                             </Box>
-                          </Button>
+                      </Button>
                         )}
-                      </CardContent>
-                    </Card>
+                  </CardContent>
+                </Card>
                   </Box>
                 );
               })}

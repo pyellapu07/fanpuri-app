@@ -40,6 +40,7 @@ import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { auth } from '../firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
+import LimitedEditionBanner from '../components/LimitedEditionBanner';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -387,7 +388,7 @@ const ProductDetail = () => {
 
   return (
     <Box sx={{ bgcolor: 'white', minHeight: '100vh' }}>
-      <Container maxWidth="xl" sx={{ py: 0, px: { xs: 0, md: 0 } }}>
+      <Container maxWidth="xl" sx={{ py: 0, px: { xs: 2, md: 0 } }}>
       
       {/* Limited Edition Banner - Dynamic Promotional Product */}
       {limitedEditionProduct && (
@@ -398,7 +399,7 @@ const ProductDetail = () => {
               bgcolor: '#1976d2', 
               color: 'white', 
               py: 3, 
-              px: 0,
+              px: { xs: 3, md: 0 },
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -437,7 +438,7 @@ const ProductDetail = () => {
       )}
       
       {/* Breadcrumbs */}
-        <Box sx={{ py: 2, px: { xs: 2, md: 4 } }}>
+        <Box sx={{ py: 2, px: { xs: 0, md: 4 } }}>
           <Breadcrumbs sx={{ fontSize: '0.75rem' }}>
             <Link component={RouterLink} color="inherit" to="/" sx={{ textDecoration: 'none' }}>
           Home
@@ -456,7 +457,7 @@ const ProductDetail = () => {
 
         <Grid container spacing={0}>
           {/* Product Images - Left Side */}
-          <Grid xs={12} md={6} sx={{ p: { xs: 1, md: 4 } }}>
+          <Grid item xs={12} md={6} sx={{ p: { xs: 0, md: 4 } }}>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', width: '100%' }}>
               {/* Thumbnail Images - Left Side (Hidden on Mobile) */}
               <Box sx={{ 
@@ -565,13 +566,13 @@ const ProductDetail = () => {
           </Grid>
 
           {/* Product Info - Right Side */}
-          <Grid xs={12} md={6} sx={{ p: { xs: 1, md: 4 } }}>
-          <Box>
+          <Grid item xs={12} md={6} sx={{ p: { xs: 0, md: 4 } }}>
+          <Box sx={{ width: '100%' }}>
               {/* Fandom Badge */}
             <Chip
               label={product.fandom}
                 sx={{
-                  mb: 2,
+                  mb: 1,
                   bgcolor: '#000',
                   color: 'white',
                   fontWeight: 600,
@@ -586,11 +587,13 @@ const ProductDetail = () => {
                 variant="h3" 
                 component="h1" 
                 sx={{
-                  fontWeight: 700,
+                  fontFamily: '"Open Sans", sans-serif',
+                  fontWeight: 800,
                   fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
                   lineHeight: 1.2,
                   mb: 2,
                   color: '#000',
+                  textTransform: { xs: 'uppercase', md: 'none' },
                 }}
               >
               {product.name}
@@ -602,8 +605,8 @@ const ProductDetail = () => {
                   component="img"
                   src={product.artist.avatar}
                   sx={{
-                    width: 40,
-                    height: 40,
+                    width: 28,
+                    height: 28,
                     borderRadius: '50%',
                     mr: 2,
                     objectFit: 'cover',
@@ -644,41 +647,34 @@ const ProductDetail = () => {
 
 
 
-              {/* Price Section */}
-              <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                  <Typography 
-                    variant="h4" 
-                    sx={{ 
-                      fontWeight: 700,
-                      fontSize: { xs: '1.5rem', sm: '2rem' },
-                      color: '#000',
-                    }}
-                  >
-                    ₹{product.price}
-                  </Typography>
+              {/* Limited Edition Banner and Price Section */}
+              <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+                {product.isLimited && (
+                  <LimitedEditionBanner height={60} />
+                )}
+                <Typography variant="h4" component="span" sx={{ fontWeight: 700, color: '#000' }}>
+                  ₹{product.price}
+                </Typography>
                   {product.originalPrice && product.originalPrice > product.price && (
-                    <>
-                      <Typography 
-                        variant="h6" 
-                        sx={{ 
-                          textDecoration: 'line-through',
-                          color: '#666',
-                          fontWeight: 400,
-                        }}
-                      >
-                        ₹{product.originalPrice}
-                  </Typography>
-                  <Chip
-                    label={`${calculateDiscount()}% OFF`}
-                        sx={{
-                          bgcolor: '#e74c3c',
-                          color: 'white',
-                          fontWeight: 600,
-                          fontSize: '0.75rem',
-                        }}
-                      />
-                    </>
+                    <Typography variant="h6" component="span" sx={{ 
+                      textDecoration: 'line-through', 
+                      color: 'text.secondary',
+                      fontWeight: 400 
+                    }}>
+                      ₹{product.originalPrice}
+                    </Typography>
+                  )}
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <Chip 
+                      label={`${calculateDiscount()}% OFF`}
+                      size="small"
+                      sx={{ 
+                        bgcolor: '#f44336', 
+                        color: 'white',
+                        fontWeight: 600,
+                        fontSize: '0.75rem'
+                      }}
+                    />
                   )}
                 </Box>
                 
@@ -757,8 +753,8 @@ const ProductDetail = () => {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         px: 3,
-                    width: 'fit-content',
-                    minWidth: '200px',
+                        width: { xs: '100%', md: 'fit-content' },
+                        minWidth: { xs: 'auto', md: '200px' },
                       }}
                     >
                       <span>IN CART</span>
@@ -820,20 +816,20 @@ const ProductDetail = () => {
                       size="large"
                       disabled
                         sx={{
-                        bgcolor: '#9e9e9e',
-                        color: 'white',
-                        textTransform: 'uppercase',
-                        fontSize: '0.9rem',
-                        fontWeight: 600,
-                        py: 1.5,
-                          borderRadius: '50px',
-                        letterSpacing: '0.5px',
-                        boxShadow: 'none',
-                        width: 'fit-content',
-                        minWidth: '200px',
-                        cursor: 'not-allowed',
-                        '&:hover': {
                           bgcolor: '#9e9e9e',
+                          color: 'white',
+                          textTransform: 'uppercase',
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          py: 1.5,
+                          borderRadius: '50px',
+                          letterSpacing: '0.5px',
+                          boxShadow: 'none',
+                          width: { xs: '100%', md: 'fit-content' },
+                          minWidth: { xs: 'auto', md: '200px' },
+                          cursor: 'not-allowed',
+                          '&:hover': {
+                            bgcolor: '#9e9e9e',
                           },
                         }}
                       >
@@ -861,22 +857,22 @@ const ProductDetail = () => {
                           py: 1.5,
                           borderRadius: '50px',
                           letterSpacing: '0.5px',
-                    position: 'relative',
-                    overflow: 'hidden',
+                          position: 'relative',
+                          overflow: 'hidden',
                           boxShadow: 'none',
-                    width: 'fit-content',
-                    minWidth: '200px',
+                          width: { xs: '100%', md: 'fit-content' },
+                          minWidth: { xs: 'auto', md: '200px' },
                           '&:hover': {
-                      transform: 'translateY(-1px)',
-                      color: 'white',
-                      '& .gif-overlay': {
-                        opacity: 1,
-                      },
-                    },
-                    transition: 'all 0.3s ease',
-                    display: 'block',
-                    flexShrink: 0,
-                  }}
+                            transform: 'translateY(-1px)',
+                            color: 'white',
+                            '& .gif-overlay': {
+                              opacity: 1,
+                            },
+                          },
+                          transition: 'all 0.3s ease',
+                          display: 'block',
+                          flexShrink: 0,
+                        }}
                 >
                   {/* GIF Overlay for Hover Effect */}
                   <Box
@@ -920,7 +916,7 @@ const ProductDetail = () => {
 
             {/* Waitlist Section for Sold Out Limited Edition Products */}
             {product.isLimited && product.isSoldOut && (
-              <Box sx={{ mb: 4, p: 3, border: '1px solid #e0e0e0', borderRadius: '8px', bgcolor: '#f8f9fa' }}>
+              <Box sx={{ mb: 4, px: { xs: 4, md: 5 }, py: { xs: 3, md: 4 }, border: '1px solid #e0e0e0', borderRadius: '8px', bgcolor: '#f8f9fa' }}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#d32f2f' }}>
                   🔥 Limited Edition - SOLD OUT
                 </Typography>
@@ -977,7 +973,7 @@ const ProductDetail = () => {
 
             {/* Limited Edition Info for Available Products */}
             {product.isLimited && !product.isSoldOut && (
-              <Box sx={{ mb: 4, p: 3, border: '1px solid #ff9800', borderRadius: '8px', bgcolor: '#fff3e0' }}>
+              <Box sx={{ mb: 4, px: { xs: 4, md: 5 }, py: { xs: 3, md: 4 }, border: '1px solid #ff9800', borderRadius: '8px', bgcolor: '#fff3e0' }}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#f57c00' }}>
                   ⚡ Limited Edition - Only {product.remainingCopies} Left!
                 </Typography>
@@ -994,48 +990,47 @@ const ProductDetail = () => {
                 </Typography>
             </Box>
 
-            {/* Shipping Info */}
-              <Card sx={{ p: 3, bgcolor: '#F3F3F7', borderRadius: '8px', boxShadow: 'none' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
-                Shipping & Returns
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <LocalShipping sx={{ mr: 1, fontSize: 20, color: '#666' }} />
-                  <Typography variant="body2" color="text.secondary">
-                    Free shipping on orders over ₹500
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Security sx={{ mr: 1, fontSize: 20, color: '#666' }} />
-                  <Typography variant="body2" color="text.secondary">
-                  Secure payment processing
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Refresh sx={{ mr: 1, fontSize: 20, color: '#666' }} />
-                  <Typography variant="body2" color="text.secondary">
-                  30-day return policy
-                </Typography>
-              </Box>
-            </Card>
-          </Box>
-        </Grid>
-      </Grid>
-      
-      {/* Login/Signup Dialog */}
-      <Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
-        <DialogTitle>Login Required</DialogTitle>
-        <DialogContent>
-          Please login or sign up to add items to your cart.
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setLoginDialogOpen(false)} color="secondary">Cancel</Button>
-          <Button onClick={() => { setLoginDialogOpen(false); window.location.href = '/login'; }} color="primary" variant="contained">Login / Signup</Button>
-        </DialogActions>
-      </Dialog>
-      </Container>
-      </Box>
-  );
+{/* Shipping Info */}
+<Card sx={{ p: 3, bgcolor: '#F3F3F7', borderRadius: '8px', boxShadow: 'none' }}>
+    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
+      Shipping & Returns
+    </Typography>
+    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+      <LocalShipping sx={{ mr: 1, fontSize: 20, color: '#666' }} />
+      <Typography variant="body2" color="text.secondary">
+        Free shipping on orders over ₹500
+      </Typography>
+    </Box>
+    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+      <Security sx={{ mr: 1, fontSize: 20, color: '#666' }} />
+      <Typography variant="body2" color="text.secondary">
+        Secure payment processing
+      </Typography>
+    </Box>
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Refresh sx={{ mr: 1, fontSize: 20, color: '#666' }} />
+      <Typography variant="body2" color="text.secondary">
+        30-day return policy
+      </Typography>
+    </Box>
+  </Card>
+</Grid> {/* closes <Grid item xs={12} md={6}> */}
+</Grid>   {/* closes <Grid container spacing={0}> */}
+
+{/* Login/Signup Dialog */}
+<Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
+  <DialogTitle>Login Required</DialogTitle>
+  <DialogContent>
+    Please login or sign up to add items to your cart.
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setLoginDialogOpen(false)} color="secondary">Cancel</Button>
+    <Button onClick={() => { setLoginDialogOpen(false); window.location.href = '/login'; }} color="primary" variant="contained">Login / Signup</Button>
+  </DialogActions>
+</Dialog>
+</Container>
+</Box>
+);
 };
 
-export default ProductDetail; 
+export default ProductDetail;
