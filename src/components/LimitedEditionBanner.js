@@ -9,7 +9,7 @@ const LimitedEditionBanner = ({ height = 100, showIcon = true, showText = true }
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        width: '20%',
+        width: { xs: '29%', sm: '25%', md: '20%' },
         height: '32px',
         overflow: 'hidden',
       }}

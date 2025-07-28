@@ -568,19 +568,20 @@ const ProductDetail = () => {
           {/* Product Info - Right Side */}
           <Grid item xs={12} md={6} sx={{ p: { xs: 0, md: 4 } }}>
           <Box sx={{ width: '100%' }}>
-              {/* Fandom Badge */}
-            <Chip
-              label={product.fandom}
-                sx={{
-                  mb: 1,
-                  bgcolor: '#000',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}
-            />
+              {/* Fandom Text */}
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                mb: { xs: 0.5, md: 1 },
+                color: '#666',
+                fontSize: '0.75rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                fontWeight: 500,
+              }}
+            >
+              {product.fandom}
+            </Typography>
 
             {/* Product Title */}
               <Typography 
@@ -591,7 +592,7 @@ const ProductDetail = () => {
                   fontWeight: 800,
                   fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
                   lineHeight: 1.2,
-                  mb: 2,
+                  mb: { xs: 0.5, md: 1 },
                   color: '#000',
                   textTransform: { xs: 'uppercase', md: 'none' },
                 }}
@@ -600,7 +601,7 @@ const ProductDetail = () => {
             </Typography>
 
             {/* Artist Info */}
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 1, md: 2 } }}>
                 <Box
                   component="img"
                   src={product.artist.avatar}
@@ -648,7 +649,7 @@ const ProductDetail = () => {
 
 
               {/* Limited Edition Banner and Price Section */}
-              <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ mb: { xs: 1, md: 2 }, display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 } }}>
                 {product.isLimited && (
                   <LimitedEditionBanner height={60} />
                 )}
@@ -679,15 +680,13 @@ const ProductDetail = () => {
                 </Box>
                 
                 {/* Payment Options */}
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 1, md: 2 } }}>
                   4 interest-free payments with Afterpay
                 </Typography>
             </Box>
 
-
-
             {/* Size Selection */}
-              <Box sx={{ mb: 4 }}>
+              <Box sx={{ mb: { xs: 1, md: 2 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#333' }}>
                   Size
@@ -734,7 +733,7 @@ const ProductDetail = () => {
             </Box>
 
             {/* Add to Cart */}
-              <Box sx={{ mb: 4 }}>
+              <Box sx={{ mb: { xs: 1, md: 2 } }}>
                   {cartItem ? (
                     <Button
                       variant="contained"
@@ -916,7 +915,7 @@ const ProductDetail = () => {
 
             {/* Waitlist Section for Sold Out Limited Edition Products */}
             {product.isLimited && product.isSoldOut && (
-              <Box sx={{ mb: 4, px: { xs: 4, md: 5 }, py: { xs: 3, md: 4 }, border: '1px solid #e0e0e0', borderRadius: '8px', bgcolor: '#f8f9fa' }}>
+              <Box sx={{ mb: { xs: 1, md: 2 }, px: { xs: 3, md: 5 }, py: { xs: 1.5, md: 3 }, border: '1px solid #e0e0e0', borderRadius: '8px', bgcolor: '#f8f9fa' }}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#d32f2f' }}>
                   🔥 Limited Edition - SOLD OUT
                 </Typography>
@@ -973,7 +972,7 @@ const ProductDetail = () => {
 
             {/* Limited Edition Info for Available Products */}
             {product.isLimited && !product.isSoldOut && (
-              <Box sx={{ mb: 4, px: { xs: 4, md: 5 }, py: { xs: 3, md: 4 }, border: '1px solid #ff9800', borderRadius: '8px', bgcolor: '#fff3e0' }}>
+              <Box sx={{ mb: { xs: 1, md: 2 }, px: { xs: 3, md: 5 }, py: { xs: 1.5, md: 3 }, border: '1px solid #ff9800', borderRadius: '8px', bgcolor: '#fff3e0' }}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#f57c00' }}>
                   ⚡ Limited Edition - Only {product.remainingCopies} Left!
                 </Typography>
@@ -984,7 +983,7 @@ const ProductDetail = () => {
             )}
 
               {/* Product Description */}
-              <Box sx={{ mb: 4 }}>
+              <Box sx={{ mb: { xs: 1, md: 2 } }}>
                 <Typography variant="body1" sx={{ lineHeight: 1.6, color: '#333' }}>
                   {product.description}
                 </Typography>
