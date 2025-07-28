@@ -18,6 +18,49 @@ const Login = () => {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
       console.log('Login successful:', result.user);
+      
+      // Check if this is a new user (first time signing in)
+      const isNewUser = result.additionalUserInfo?.isNewUser;
+      
+      console.log('🔍 User registration check:', {
+        isNewUser: isNewUser,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        uid: result.user.uid
+      });
+      
+      if (isNewUser) {
+        // Send registration data to backend for welcome email
+        try {
+          const response = await fetch('http://localhost:5000/api/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: result.user.email,
+              displayName: result.user.displayName,
+              photoURL: result.user.photoURL,
+              uid: result.user.uid,
+              isArtist: false // Default to regular user
+            }),
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('✅ User registered successfully:', data.message);
+            if (data.emailSent) {
+              console.log('📧 Welcome email sent!');
+            }
+          } else {
+            console.warn('⚠️ Registration API call failed, but login succeeded');
+          }
+        } catch (regError) {
+          console.warn('⚠️ Registration API call failed, but login succeeded:', regError);
+          // Don't fail the login if registration API fails
+        }
+      }
+      
     } catch (err) {
       console.error('Login error:', err);
       if (err.code === 'auth/popup-closed-by-user') {
