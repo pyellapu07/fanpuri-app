@@ -4,6 +4,7 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const { db, bucket } = require('./firebase-config');
+const { sendWelcomeEmail, sendArtistWelcomeEmail, testEmailConfig } = require('./email-service');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -943,6 +944,72 @@ app.get('/api/upload/status', (req, res) => {
   });
 });
 
+// User registration endpoint (for welcome emails)
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, displayName, photoURL, uid, isArtist = false } = req.body;
+    
+    if (!email || !uid) {
+      return res.status(400).json({ message: 'Email and UID are required' });
+    }
+    
+    // Create user data object
+    const userData = {
+      email,
+      displayName: displayName || email.split('@')[0],
+      photoURL: photoURL || null,
+      uid,
+      creationTime: new Date().toISOString(),
+      isArtist: isArtist || false
+    };
+    
+    // Store user in Firestore
+    await db.collection('users').doc(uid).set(userData);
+    
+    // Send welcome email
+    try {
+      if (isArtist) {
+        await sendArtistWelcomeEmail({
+          name: userData.displayName,
+          email: userData.email,
+          username: userData.displayName.toLowerCase().replace(/\s+/g, ''),
+          creationTime: userData.creationTime
+        });
+      } else {
+        await sendWelcomeEmail(userData);
+      }
+      console.log(`✅ Welcome email sent to: ${email}`);
+    } catch (emailError) {
+      console.error('⚠️ Email sending failed, but user registration succeeded:', emailError.message);
+      // Don't fail the registration if email fails
+    }
+    
+    res.json({ 
+      message: 'User registered successfully',
+      user: userData,
+      emailSent: true
+    });
+    
+  } catch (error) {
+    console.error('Error registering user:', error);
+    res.status(500).json({ message: 'Error registering user', error: error.message });
+  }
+});
+
+// Test email configuration endpoint
+app.get('/api/test-email', async (req, res) => {
+  try {
+    const isConfigValid = await testEmailConfig();
+    if (isConfigValid) {
+      res.json({ message: 'Email configuration is valid', status: 'success' });
+    } else {
+      res.status(500).json({ message: 'Email configuration is invalid', status: 'error' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error testing email configuration', error: error.message });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -952,4 +1019,13 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT} (Firebase Mode)`);
   console.log(`Admin interface: http://localhost:${PORT}/admin.html`);
+  
+  // Test email configuration on startup
+  testEmailConfig().then(isValid => {
+    if (isValid) {
+      console.log('✅ Email service configured successfully');
+    } else {
+      console.log('⚠️ Email service configuration failed - check your environment variables');
+    }
+  });
 }); 
