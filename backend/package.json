@@ -11,6 +11,7 @@
     "dev-simple": "nodemon server-simple.js",
     "firebase": "node server-firebase.js",
     "dev-firebase": "nodemon server-firebase.js",
+    "populate": "node populate-firebase.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

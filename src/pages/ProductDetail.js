@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../config';
 import {
   Box,
   Container,
@@ -17,6 +18,12 @@ import {
   CardContent,
   Alert,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tooltip,
+  TextField,
 } from '@mui/material';
 import {
   Favorite,
@@ -41,16 +48,41 @@ const ProductDetail = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedSize, setSelectedSize] = useState('A4');
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [limitedEditionProduct, setLimitedEditionProduct] = useState(null);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const [waitlistError, setWaitlistError] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
     });
     return () => unsubscribe();
+  }, []);
+
+  // Fetch limited edition product for banner
+  useEffect(() => {
+    const fetchLimitedEditionProduct = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/products/featured`);
+        if (response.ok) {
+          const data = await response.json();
+          // Find the first limited edition product
+          const limitedProduct = data.products?.find(p => p.isLimitedEdition) || data.find(p => p.isLimitedEdition);
+          if (limitedProduct) {
+            setLimitedEditionProduct(limitedProduct);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching limited edition product:', error);
+      }
+    };
+
+    fetchLimitedEditionProduct();
   }, []);
 
     // Fetch product data from backend
@@ -66,7 +98,7 @@ const ProductDetail = () => {
         
         console.log('Fetching product with ID:', id);
         
-        const response = await fetch(`https://fanpuri-app-1.onrender.com/api/products/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
           signal: controller.signal
         });
         
@@ -89,12 +121,13 @@ const ProductDetail = () => {
         
         // Transform backend data to match frontend format
         const transformedProduct = {
-          id: data._id || data.id,
+          id: data.id,
           name: data.name || 'Untitled Product',
           artist: {
             id: data.artist?._id || data.artist?.id || 1,
             name: data.artist?.name || 'Unknown Artist',
             avatar: data.artist?.avatar || 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=50&h=50&fit=crop',
+            isVerified: data.artist?.isVerified || false,
           },
           price: data.price,
           originalPrice: data.originalPrice,
@@ -115,9 +148,16 @@ const ProductDetail = () => {
           images: data.images && data.images.length > 0 
             ? data.images.map(img => img.url)
             : ["https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop"],
+          image: data.images && data.images.length > 0 
+            ? data.images[0].url 
+            : "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop",
           inStock: data.isActive !== false,
           stockQuantity: data.limitedEditionInfo?.availableCopies || 50,
-          isLimited: data.isLimitedEdition || false,
+          isLimited: data.isLimitedEdition === true || data.isLimitedEdition === 'true' || false,
+          isSoldOut: data.isSoldOut || false,
+          soldCopies: data.soldCopies || 0,
+          totalCopies: data.totalCopies || 0,
+          remainingCopies: Math.max(0, (data.totalCopies || 0) - (data.soldCopies || 0)),
           endDate: data.limitedEditionInfo?.endDate,
           tags: data.tags || ["Fan Art", "Limited Edition"],
         };
@@ -142,6 +182,7 @@ const ProductDetail = () => {
             id: 1,
             name: "ArtVault Studios",
             avatar: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=50&h=50&fit=crop",
+            isVerified: true,
           },
           price: 29.99,
           originalPrice: 39.99,
@@ -164,6 +205,7 @@ const ProductDetail = () => {
             "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop",
             "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=800&fit=crop",
           ],
+          image: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop",
           inStock: true,
           stockQuantity: 45,
           isLimited: false,
@@ -184,30 +226,40 @@ const ProductDetail = () => {
 
   const [product, setProduct] = useState(null);
 
-  const cartItem = cart.find((item) => item.id === parseInt(id));
-
-  const handleQuantityChange = (event) => {
-    const value = parseInt(event.target.value);
-    if (value > 0 && value <= product?.stockQuantity) {
-      setQuantity(value);
-    }
-  };
-
-  const handleAddToCart = () => {
-    if (!user) {
-      setLoginDialogOpen(true);
-      return;
-    }
-    
-    if (cartItem) {
-      updateQuantity(parseInt(id), cartItem.quantity + quantity);
-    } else {
-      addToCart({ ...product, quantity });
-    }
-  };
+  const cartItem = cart.find((item) => item.id === product?.id);
 
   const handleWishlist = () => {
     setIsWishlisted(!isWishlisted);
+  };
+
+  const handleWaitlistSubmit = async (e) => {
+    e.preventDefault();
+    setWaitlistError('');
+    
+    if (!waitlistEmail || !waitlistEmail.includes('@')) {
+      setWaitlistError('Please enter a valid email address');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/products/${id}/waitlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: waitlistEmail }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add to waitlist');
+    }
+      
+      setWaitlistSubmitted(true);
+      setWaitlistEmail('');
+    } catch (error) {
+      setWaitlistError(error.message);
+    }
   };
 
   const calculateDiscount = () => {
@@ -225,7 +277,7 @@ const ProductDetail = () => {
   const testBackendConnection = async () => {
     try {
       console.log('Testing backend connection...');
-      const response = await fetch('https://fanpuri-app-1.onrender.com/api/products/featured');
+              const response = await fetch(`${API_BASE_URL}/api/products/featured`);
       const data = await response.json();
       console.log('Featured products from backend:', data);
       
@@ -308,10 +360,58 @@ const ProductDetail = () => {
 
   return (
     <Box sx={{ bgcolor: 'white', minHeight: '100vh' }}>
-      <Container maxWidth="xl" sx={{ py: 0, px: { xs: 2, md: 0 } }}>
+      <Container maxWidth="xl" sx={{ py: 0, px: { xs: 0, md: 0 } }}>
+      
+      {/* Limited Edition Banner - Dynamic Promotional Product */}
+      {limitedEditionProduct && (
+        <Tooltip title={`Click to view ${limitedEditionProduct.name} - Limited Edition Product`} arrow>
+          <Box 
+            onClick={() => navigate(`/product/${limitedEditionProduct.id}`)}
+            sx={{ 
+              bgcolor: '#1976d2', 
+              color: 'white', 
+              py: 3, 
+              px: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 2,
+              fontSize: '1.25rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              width: '100vw',
+              marginLeft: 'calc(-50vw + 50%)',
+              marginRight: 'calc(-50vw + 50%)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                bgcolor: '#1565c0',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+              }
+            }}
+          >
+            <Box
+              component="img"
+              src={limitedEditionProduct.images?.[0]?.url || limitedEditionProduct.images?.[0]}
+              alt={`${limitedEditionProduct.name} - Limited Edition`}
+              sx={{
+                width: 40,
+                height: 40,
+                objectFit: 'cover',
+                borderRadius: '4px',
+                border: '2px solid white'
+              }}
+            />
+            Limited Edition Exclusive - SOLD OUT
+          </Box>
+        </Tooltip>
+      )}
+      
       {/* Breadcrumbs */}
-        <Box sx={{ py: 3, borderBottom: '1px solid #e0e0e0' }}>
-          <Breadcrumbs sx={{ fontSize: '0.875rem' }}>
+        <Box sx={{ py: 2, px: { xs: 2, md: 4 } }}>
+          <Breadcrumbs sx={{ fontSize: '0.75rem' }}>
             <Link component={RouterLink} color="inherit" to="/" sx={{ textDecoration: 'none' }}>
           Home
         </Link>
@@ -330,39 +430,9 @@ const ProductDetail = () => {
         <Grid container spacing={0}>
           {/* Product Images - Left Side */}
           <Grid xs={12} md={6} sx={{ p: { xs: 2, md: 4 } }}>
-            <Box sx={{ position: 'relative' }}>
-              {/* Main Product Image */}
-              <Box
-              component="img"
-                src={product.images[selectedImage]}
-              alt={product.name}
-                sx={{
-                  width: '100%',
-                  height: { xs: 400, sm: 500, md: 600 },
-                  objectFit: 'cover',
-                  borderRadius: '8px',
-                  mb: 2,
-                }}
-              />
-              
-              {/* Wishlist Icon */}
-              <IconButton
-                onClick={handleWishlist}
-                sx={{
-                  position: 'absolute',
-                  top: 16,
-                  right: 16,
-                  bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': {
-                    bgcolor: 'rgba(255,255,255,1)',
-                  },
-                }}
-              >
-                {isWishlisted ? <Favorite color="error" /> : <FavoriteBorder />}
-              </IconButton>
-
-              {/* Thumbnail Images */}
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', width: '100%' }}>
+              {/* Thumbnail Images - Left Side */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {product.images.map((image, index) => (
                   <Box
                     key={index}
@@ -384,6 +454,47 @@ const ProductDetail = () => {
                     }}
                   />
                 ))}
+              </Box>
+
+              {/* Main Product Image - Right Side */}
+              <Box sx={{ 
+                position: 'relative', 
+                flex: 1,
+                width: '700px',
+                height: '600px',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Box
+                  component="img"
+                  src={product.images[selectedImage]}
+                  alt={product.name}
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    transition: 'opacity 0.3s ease',
+                  }}
+                />
+                
+                {/* Wishlist Icon */}
+                <IconButton
+                  onClick={handleWishlist}
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    bgcolor: 'rgba(255,255,255,0.9)',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,1)',
+                    },
+                  }}
+                >
+                  {isWishlisted ? <Favorite color="error" /> : <FavoriteBorder />}
+                </IconButton>
               </Box>
           </Box>
         </Grid>
@@ -450,22 +561,23 @@ const ProductDetail = () => {
                   >
                     {product.artist.name}
                   </Link>
+                  {product.artist.isVerified && (
+                                          <img
+                        src="/assets/verified_24dp_1976D2_FILL1_wght400_GRAD0_opsz24.svg"
+                        alt="Verified Artist"
+                        style={{
+                          width: '12px',
+                          height: '12px',
+                          marginLeft: '4px',
+                          verticalAlign: 'middle'
+                        }}
+                      />
+                  )}
                 </Typography>
               </Box>
             </Box>
 
-            {/* Rating */}
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Rating 
-                  value={product.rating} 
-                  precision={0.1} 
-                  readOnly 
-                  sx={{ mr: 1 }}
-                />
-                <Typography variant="body2" color="text.secondary">
-                ({product.reviews} reviews)
-              </Typography>
-            </Box>
+
 
               {/* Price Section */}
               <Box sx={{ mb: 4 }}>
@@ -511,37 +623,60 @@ const ProductDetail = () => {
                 </Typography>
             </Box>
 
-            {/* Stock Status */}
+
+
+            {/* Size Selection */}
               <Box sx={{ mb: 4 }}>
-              {product.inStock ? (
-                  <Typography 
-                    variant="body2" 
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#333' }}>
+                  Size
+                </Typography>
+                <Link 
+                  href="#" 
                     sx={{ 
-                      color: '#2ecc71',
-                      fontWeight: 600,
+                    fontSize: '0.875rem', 
+                    color: '#1976d2', 
+                    textDecoration: 'underline',
                       display: 'flex',
                       alignItems: 'center',
+                    gap: 0.5
                     }}
                   >
-                  ✓ In Stock ({product.stockQuantity} available)
-                </Typography>
-              ) : (
-                  <Typography variant="body2" color="error.main" fontWeight={600}>
-                  Out of Stock
-                </Typography>
-              )}
+                  <Box component="span" sx={{ fontSize: '1rem' }}>📏</Box>
+                  View Size Chart
+                </Link>
+              </Box>
+              
+              <Select
+                value={selectedSize}
+                onChange={(e) => setSelectedSize(e.target.value)}
+                sx={{
+                  width: '100%',
+                  borderRadius: '8px',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#e0e0e0',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1976d2',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#1976d2',
+                  },
+                }}
+              >
+                <MenuItem value="A4">A4 (210 × 297 mm)</MenuItem>
+                <MenuItem value="A3">A3 (297 × 420 mm)</MenuItem>
+                <MenuItem value="A2">A2 (420 × 594 mm)</MenuItem>
+                <MenuItem value="A1">A1 (594 × 841 mm)</MenuItem>
+                <MenuItem value="A0">A0 (841 × 1189 mm)</MenuItem>
+              </Select>
             </Box>
 
-            {/* Quantity and Add to Cart */}
+            {/* Add to Cart */}
               <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, minWidth: 80 }}>
-                Quantity
-              </Typography>
                   {cartItem ? (
                     <Button
                       variant="contained"
-                      fullWidth
                       sx={{
                         bgcolor: '#000',
                         color: '#fff',
@@ -557,12 +692,26 @@ const ProductDetail = () => {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         px: 3,
+                    width: 'fit-content',
+                    minWidth: '200px',
                       }}
                     >
                       <span>IN CART</span>
                       <Select
                         value={cartItem.quantity}
-                        onChange={e => updateQuantity(parseInt(id), Number(e.target.value))}
+                    onChange={e => { 
+                      e.preventDefault(); 
+                      e.stopPropagation(); 
+                      updateQuantity(product.id, Number(e.target.value)); 
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
                         size="small"
                         sx={{
                           bgcolor: 'rgba(255,255,255,0.2)',
@@ -586,39 +735,58 @@ const ProductDetail = () => {
                         }}
                       >
                         {[...Array(12)].map((_, i) => (
-                          <MenuItem key={i + 1} value={i + 1} sx={{ fontSize: '0.8rem' }}>
+                      <MenuItem 
+                        key={i + 1} 
+                        value={i + 1} 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        sx={{ fontSize: '0.8rem' }}
+                      >
                             {i + 1}
                           </MenuItem>
                         ))}
                       </Select>
                     </Button>
-                  ) : (
-                    <>
-                      <Select
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                        size="small"
+                  ) : product.isSoldOut ? (
+                    <Button
+                      variant="contained"
+                      size="large"
+                      disabled
                         sx={{
-                          minWidth: 80,
-                          height: 45,
+                        bgcolor: '#9e9e9e',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        fontSize: '0.9rem',
+                        fontWeight: 600,
+                        py: 1.5,
                           borderRadius: '50px',
-                          '& .MuiSelect-select': {
-                            textAlign: 'center',
-                            py: 1,
+                        letterSpacing: '0.5px',
+                        boxShadow: 'none',
+                        width: 'fit-content',
+                        minWidth: '200px',
+                        cursor: 'not-allowed',
+                        '&:hover': {
+                          bgcolor: '#9e9e9e',
                           },
                         }}
                       >
-                        {[...Array(Math.min(12, product.stockQuantity))].map((_, i) => (
-                          <MenuItem key={i + 1} value={i + 1}>
-                            {i + 1}
-                          </MenuItem>
-                        ))}
-                      </Select>
+                      SOLD OUT
+                    </Button>
+                  ) : (
                 <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!user) {
+                      setLoginDialogOpen(true);
+                    } else {
+                      addToCart(product);
+                    }
+                  }}
                   variant="contained"
-                        fullWidth
-                  onClick={handleAddToCart}
-                  disabled={!product.inStock}
+                  size="large"
                         sx={{
                           bgcolor: '#F3F3F7',
                           color: 'black',
@@ -628,37 +796,131 @@ const ProductDetail = () => {
                           py: 1.5,
                           borderRadius: '50px',
                           letterSpacing: '0.5px',
+                    position: 'relative',
+                    overflow: 'hidden',
                           boxShadow: 'none',
+                    width: 'fit-content',
+                    minWidth: '200px',
                           '&:hover': {
-                            bgcolor: '#e0e0e0',
-                          },
-                        }}
+                      transform: 'translateY(-1px)',
+                      color: 'white',
+                      '& .gif-overlay': {
+                        opacity: 1,
+                      },
+                    },
+                    transition: 'all 0.3s ease',
+                    display: 'block',
+                    flexShrink: 0,
+                  }}
                 >
+                  {/* GIF Overlay for Hover Effect */}
+                  <Box
+                    className="gif-overlay"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      transition: 'opacity 0.3s ease',
+                      zIndex: 1,
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src="/assets/Add to cart animation.gif"
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '50px',
+                        }}
+                      onMouseEnter={(e) => {
+                        // Restart GIF animation by reloading the image
+                        const img = e.target;
+                        const src = img.src;
+                        img.src = '';
+                        img.src = src;
+                      }}
+                    />
+                  </Box>
+                  {/* Button Text */}
+                  <Box sx={{ position: 'relative', zIndex: 2 }}>
                   Add to Cart
+                  </Box>
                 </Button>
-                    </>
-                  )}
-                </Box>
-              </Box>
-
-              {/* Final Sale Notice */}
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#e74c3c' }}>
-                  THIS ITEM IS FINAL SALE.
-                </Typography>
+              )}
             </Box>
 
-              {/* Gift Box Option */}
-              <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <input type="checkbox" id="giftBox" />
-                  <label htmlFor="giftBox">
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      Gift Box (₹3.50)
-              </Typography>
-                  </label>
+            {/* Waitlist Section for Sold Out Limited Edition Products */}
+            {product.isLimited && product.isSoldOut && (
+              <Box sx={{ mb: 4, p: 3, border: '1px solid #e0e0e0', borderRadius: '8px', bgcolor: '#f8f9fa' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#d32f2f' }}>
+                  🔥 Limited Edition - SOLD OUT
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2, color: '#666' }}>
+                  This limited edition product is currently sold out. Join our waitlist to be notified when it becomes available again!
+                </Typography>
+                
+                {waitlistSubmitted ? (
+                  <Alert severity="success" sx={{ mb: 2 }}>
+                    Thank you! You've been added to the waitlist. We'll notify you when this product is back in stock.
+                  </Alert>
+                ) : (
+                  <Box component="form" onSubmit={handleWaitlistSubmit}>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                      <TextField
+                        type="email"
+                        placeholder="Enter your email address"
+                        value={waitlistEmail}
+                        onChange={(e) => setWaitlistEmail(e.target.value)}
+                        size="small"
+                        sx={{
+                          flex: 1,
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
+                          },
+                        }}
+                      />
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        size="small"
+                        sx={{
+                          bgcolor: '#d32f2f',
+                          borderRadius: '8px',
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          '&:hover': {
+                            bgcolor: '#b71c1c',
+                          },
+                        }}
+                      >
+                        Notify Me
+                      </Button>
+                    </Box>
+                    {waitlistError && (
+                      <Alert severity="error" sx={{ mt: 1 }}>
+                        {waitlistError}
+                      </Alert>
+                  )}
                 </Box>
+                )}
               </Box>
+            )}
+
+            {/* Limited Edition Info for Available Products */}
+            {product.isLimited && !product.isSoldOut && (
+              <Box sx={{ mb: 4, p: 3, border: '1px solid #ff9800', borderRadius: '8px', bgcolor: '#fff3e0' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#f57c00' }}>
+                  ⚡ Limited Edition - Only {product.remainingCopies} Left!
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#666' }}>
+                  This is a limited edition product with only {product.remainingCopies} copies remaining. Don't miss out!
+              </Typography>
+              </Box>
+            )}
 
               {/* Product Description */}
               <Box sx={{ mb: 4 }}>
@@ -668,7 +930,7 @@ const ProductDetail = () => {
             </Box>
 
             {/* Shipping Info */}
-              <Card sx={{ p: 3, bgcolor: '#f8f9fa', borderRadius: '8px' }}>
+              <Card sx={{ p: 3, bgcolor: '#F3F3F7', borderRadius: '8px', boxShadow: 'none' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
                 Shipping & Returns
               </Typography>
@@ -694,6 +956,18 @@ const ProductDetail = () => {
           </Box>
         </Grid>
       </Grid>
+      
+      {/* Login/Signup Dialog */}
+      <Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
+        <DialogTitle>Login Required</DialogTitle>
+        <DialogContent>
+          Please login or sign up to add items to your cart.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLoginDialogOpen(false)} color="secondary">Cancel</Button>
+          <Button onClick={() => { setLoginDialogOpen(false); window.location.href = '/login'; }} color="primary" variant="contained">Login / Signup</Button>
+        </DialogActions>
+      </Dialog>
       </Container>
       </Box>
   );

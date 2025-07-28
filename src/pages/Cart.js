@@ -155,9 +155,12 @@ const Cart = () => {
                     component="img"
                     height="100%"
                     width="100%"
-                    image={item.image}
+                    image={item.image || (item.images && item.images.length > 0 ? item.images[0].url : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop')}
                     alt={item.name}
                     sx={{ objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop';
+                    }}
                   />
                 </Box>
 
@@ -188,7 +191,7 @@ const Cart = () => {
                         display: 'block',
                         mb: 0.5
                       }}>
-                        by {item.artist}
+                        by {typeof item.artist === 'object' ? item.artist?.name || 'Unknown Artist' : item.artist || 'Unknown Artist'}
                       </Typography>
                       <Typography variant="body1" color="primary" sx={{ 
                         fontWeight: 700,
@@ -435,9 +438,12 @@ const Cart = () => {
                           component="img"
                           height="100%"
                           width="100%"
-                          image={item.image}
+                          image={item.image || (item.images && item.images.length > 0 ? item.images[0].url : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop')}
                           alt={item.name}
                           sx={{ objectFit: 'cover' }}
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop';
+                          }}
                         />
                       </Box>
 
@@ -463,7 +469,7 @@ const Cart = () => {
                         fontSize: '0.75rem',
                         display: 'block'
                       }}>
-                        by {item.artist}
+                        by {typeof item.artist === 'object' ? item.artist?.name || 'Unknown Artist' : item.artist || 'Unknown Artist'}
                       </Typography>
                       <Typography variant="body1" color="primary" sx={{ 
                         fontWeight: 700,

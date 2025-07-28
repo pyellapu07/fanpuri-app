@@ -65,7 +65,15 @@ export const CartProvider = ({ children }) => {
     setCart((prev) => {
       // Prevent duplicates by id
       if (prev.find((item) => item.id === product.id)) return prev;
-      return [...prev, { ...product, quantity: 1 }];
+      
+      // Ensure consistent image structure
+      const cartItem = {
+        ...product,
+        quantity: 1,
+        image: product.image || (product.images && product.images.length > 0 ? product.images[0].url : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop')
+      };
+      
+      return [...prev, cartItem];
     });
   };
 

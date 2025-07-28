@@ -31,6 +31,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase-config';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useCart } from '../contexts/CartContext';
+import { useFavorites } from '../contexts/FavoritesContext';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -80,6 +81,7 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   const { cart } = useCart();
+  const { favorites } = useFavorites();
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -327,6 +329,9 @@ const Navbar = () => {
                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                >
                  <MenuItem onClick={() => { handleAccountMenuClose(); navigate('/profile'); }}>Profile</MenuItem>
+                 <MenuItem onClick={() => { handleAccountMenuClose(); navigate('/favorites'); }}>
+                   Favorites ({favorites.length})
+                 </MenuItem>
                  <MenuItem onClick={() => { handleAccountMenuClose(); navigate('/orders'); }}>Orders</MenuItem>
                  <MenuItem onClick={() => { handleAccountMenuClose(); navigate('/settings'); }}>Settings</MenuItem>
                  <MenuItem onClick={handleLogout}>Logout</MenuItem>

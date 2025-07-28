@@ -28,6 +28,7 @@ backend/uploads/
 backend/data/
 backend/.env
 backend/fanpuri-*-firebase-adminsdk-*.json
+backend/serviceAccountKey.json
 
 # IDE
 .vscode/

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../config';
 import {
   Box,
   Container,
@@ -46,7 +47,7 @@ const Artists = () => {
     const fetchArtists = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://fanpuri-app-1.onrender.com/api/artists');
+        const response = await fetch(`${API_BASE_URL}/api/artists`);
         if (!response.ok) {
           throw new Error('Failed to fetch artists');
         }

@@ -187,6 +187,42 @@ app.get('/api/products/featured', async (req, res) => {
   }
 });
 
+// Get product by ID
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('Fetching product with ID:', id);
+    
+    const productDoc = await db.collection('products').doc(id).get();
+    
+    if (!productDoc.exists) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    const product = {
+      id: productDoc.id,
+      ...productDoc.data()
+    };
+    
+    // Get artist data
+    if (product.artist) {
+      const artistDoc = await db.collection('artists').doc(product.artist).get();
+      if (artistDoc.exists) {
+        product.artist = {
+          id: artistDoc.id,
+          ...artistDoc.data()
+        };
+      }
+    }
+    
+    console.log('Product found:', { id: product.id, name: product.name, artist: product.artist?.name });
+    res.json(product);
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({ message: 'Error fetching product', error: error.message });
+  }
+});
+
 // Get all artists
 app.get('/api/artists', async (req, res) => {
   try {
@@ -266,6 +302,9 @@ app.post('/api/upload/product', upload.array('images', 5), async (req, res) => {
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
       isLimitedEdition: isLimitedEdition === 'true',
       totalCopies: totalCopies ? parseInt(totalCopies) : null,
+      soldCopies: 0, // Track sold copies
+      isSoldOut: false, // Track sold out status
+      waitlistEmails: [], // Store emails for back-in-stock notifications
       endDate: endDate || null,
       artist: artist.id,
       images,
@@ -310,6 +349,42 @@ app.get('/api/admin/products', async (req, res) => {
   }
 });
 
+// Get individual product for admin editing
+app.get('/api/admin/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('Admin fetching product with ID:', id);
+    
+    const productDoc = await db.collection('products').doc(id).get();
+    
+    if (!productDoc.exists) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    const product = {
+      id: productDoc.id,
+      ...productDoc.data()
+    };
+    
+    // Get artist data
+    if (product.artist) {
+      const artistDoc = await db.collection('artists').doc(product.artist).get();
+      if (artistDoc.exists) {
+        product.artist = {
+          id: artistDoc.id,
+          ...artistDoc.data()
+        };
+      }
+    }
+    
+    console.log('Admin product found:', { id: product.id, name: product.name });
+    res.json(product);
+  } catch (error) {
+    console.error('Error fetching product for admin:', error);
+    res.status(500).json({ message: 'Error fetching product', error: error.message });
+  }
+});
+
 app.get('/api/admin/artists', async (req, res) => {
   try {
     const artists = await getCollectionData('artists');
@@ -343,6 +418,164 @@ app.get('/api/admin/stats', async (req, res) => {
     res.json(stats);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching stats', error: error.message });
+  }
+});
+
+// Update product (for limited edition, etc.)
+app.patch('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    const productDoc = await db.collection('products').doc(id).get();
+    
+    if (!productDoc.exists) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    // Add updatedAt timestamp
+    updateData.updatedAt = new Date().toISOString();
+    
+    const updatedProduct = await updateInCollection('products', id, updateData);
+    
+    res.json({ 
+      message: 'Product updated successfully',
+      product: updatedProduct 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating product', error: error.message });
+  }
+});
+
+// Update product in admin (PUT endpoint)
+app.put('/api/admin/products/:id', upload.array('images', 5), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      artistName,
+      description,
+      price,
+      originalPrice,
+      category,
+      printType,
+      tags,
+      isLimitedEdition,
+      totalCopies,
+      endDate,
+      isNewArtist,
+      artistId,
+      currentImages
+    } = req.body;
+
+    console.log('Admin updating product with ID:', id);
+    console.log('Update data:', { name, artistName, category, isNewArtist, currentImages });
+
+    // Handle artist selection
+    let artist;
+    if (isNewArtist === 'true') {
+      // Create new artist
+      artist = {
+        name: artistName,
+        username: artistName.toLowerCase().replace(/\s+/g, ''),
+        email: `${artistName.toLowerCase().replace(/\s+/g, '')}@fanpuri.com`,
+        bio: `Artist specializing in ${category} fan art`,
+        specialties: [category],
+        isVerified: false,
+        totalSales: 0,
+        rating: 0,
+        reviewCount: 0,
+        joinDate: new Date().toISOString()
+      };
+      const newArtist = await addToCollection('artists', artist);
+      artist = newArtist;
+    } else {
+      // Use existing artist
+      const artistDoc = await db.collection('artists').doc(artistId).get();
+      if (!artistDoc.exists) {
+        return res.status(400).json({ message: 'Selected artist not found' });
+      }
+      artist = { id: artistDoc.id, ...artistDoc.data() };
+    }
+
+    // Handle new images if uploaded
+    let newImages = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const imageData = await uploadImageToFirebase(file, 'products');
+        newImages.push(imageData);
+      }
+    }
+
+    // Get existing product data
+    const existingProduct = await db.collection('products').doc(id).get();
+    if (!existingProduct.exists) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const existingData = existingProduct.data();
+
+    // Prepare update data
+    const updateData = {
+      name: name || existingData.name,
+      description: description || existingData.description,
+      price: price ? parseFloat(price) : existingData.price,
+      originalPrice: originalPrice ? parseFloat(originalPrice) : existingData.originalPrice,
+      category: category || existingData.category,
+      printType: printType || existingData.printType,
+      tags: tags ? tags.split(',').map(tag => tag.trim()) : existingData.tags,
+      isLimitedEdition: isLimitedEdition === 'true',
+      totalCopies: totalCopies ? parseInt(totalCopies) : existingData.totalCopies,
+      soldCopies: existingData.soldCopies || 0, // Preserve sold copies count
+      isSoldOut: existingData.isSoldOut || false, // Preserve sold out status
+      waitlistEmails: existingData.waitlistEmails || [], // Preserve waitlist emails
+      endDate: endDate || existingData.endDate,
+      artist: artist.id,
+      updatedAt: new Date().toISOString()
+    };
+
+    // Handle images: use currentImages (after removals) + new images
+    let finalImages = [];
+    
+    console.log('Original images count:', existingData.images ? existingData.images.length : 0);
+    console.log('Current images from frontend:', currentImages);
+    
+    // Parse current images (images that weren't removed)
+    if (currentImages) {
+      try {
+        const parsedCurrentImages = JSON.parse(currentImages);
+        finalImages = [...parsedCurrentImages];
+        console.log('Parsed current images count:', finalImages.length);
+      } catch (error) {
+        console.error('Error parsing currentImages:', error);
+        finalImages = existingData.images || [];
+      }
+    } else {
+      finalImages = existingData.images || [];
+    }
+    
+    // Add new images
+    if (newImages.length > 0) {
+      finalImages = [...finalImages, ...newImages];
+      console.log('Added new images count:', newImages.length);
+    }
+    
+    console.log('Final images count:', finalImages.length);
+    updateData.images = finalImages;
+
+    console.log('Updating product with data:', updateData);
+
+    const updatedProduct = await updateInCollection('products', id, updateData);
+    
+    res.json({
+      message: 'Product updated successfully',
+      product: updatedProduct
+    });
+  } catch (error) {
+    console.error('Error updating product in admin:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Error updating product', error: error.message });
   }
 });
 
@@ -422,6 +655,104 @@ app.patch('/api/admin/artists/:id/toggle-verification', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error updating artist verification', error: error.message });
+  }
+});
+
+// Purchase limited edition product
+app.post('/api/products/:id/purchase', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantity = 1 } = req.body;
+    
+    const productDoc = await db.collection('products').doc(id).get();
+    
+    if (!productDoc.exists) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    const product = productDoc.data();
+    
+    if (!product.isLimitedEdition) {
+      return res.status(400).json({ message: 'This product is not limited edition' });
+    }
+    
+    if (product.isSoldOut) {
+      return res.status(400).json({ message: 'Product is sold out' });
+    }
+    
+    const availableCopies = product.totalCopies - product.soldCopies;
+    
+    if (quantity > availableCopies) {
+      return res.status(400).json({ 
+        message: `Only ${availableCopies} copies available`,
+        availableCopies 
+      });
+    }
+    
+    // Update sold copies
+    const newSoldCopies = product.soldCopies + quantity;
+    const isSoldOut = newSoldCopies >= product.totalCopies;
+    
+    await db.collection('products').doc(id).update({
+      soldCopies: newSoldCopies,
+      isSoldOut: isSoldOut,
+      updatedAt: new Date().toISOString()
+    });
+    
+    res.json({
+      message: 'Purchase successful',
+      remainingCopies: product.totalCopies - newSoldCopies,
+      isSoldOut: isSoldOut
+    });
+    
+  } catch (error) {
+    console.error('Error processing purchase:', error);
+    res.status(500).json({ message: 'Error processing purchase', error: error.message });
+  }
+});
+
+// Add email to waitlist
+app.post('/api/products/:id/waitlist', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+    
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ message: 'Valid email is required' });
+    }
+    
+    const productDoc = await db.collection('products').doc(id).get();
+    
+    if (!productDoc.exists) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    const product = productDoc.data();
+    
+    if (!product.isLimitedEdition) {
+      return res.status(400).json({ message: 'This product is not limited edition' });
+    }
+    
+    // Check if email already exists
+    const existingEmails = product.waitlistEmails || [];
+    if (existingEmails.includes(email)) {
+      return res.status(400).json({ message: 'Email already on waitlist' });
+    }
+    
+    // Add email to waitlist
+    await db.collection('products').doc(id).update({
+      waitlistEmails: [...existingEmails, email],
+      updatedAt: new Date().toISOString()
+    });
+    
+    res.json({
+      message: 'Added to waitlist successfully',
+      waitlistCount: existingEmails.length + 1
+    });
+    
+  } catch (error) {
+    console.error('Error adding to waitlist:', error);
+    res.status(500).json({ message: 'Error adding to waitlist', error: error.message });
   }
 });
 

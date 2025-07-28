@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Product - Fanpuri Admin</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
     <style>
         * {
             margin: 0;
@@ -347,6 +354,33 @@
                             <input type="date" id="endDate" name="endDate">
                         </div>
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="soldCopies">Sold Copies</label>
+                            <input type="number" id="soldCopies" name="soldCopies" min="0" readonly>
+                            <small style="color: #666;">This field is automatically updated when customers purchase</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="remainingCopies">Remaining Copies</label>
+                            <input type="number" id="remainingCopies" name="remainingCopies" readonly>
+                            <small style="color: #666;">Calculated automatically</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="isSoldOut" name="isSoldOut">
+                            Mark as Sold Out
+                        </label>
+                        <small style="color: #666;">Check this to manually mark as sold out</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="waitlistCount">Waitlist Count</label>
+                        <input type="number" id="waitlistCount" name="waitlistCount" readonly>
+                        <small style="color: #666;">Number of emails on waitlist</small>
+                    </div>
                 </div>
 
                 <div class="current-images">
@@ -376,7 +410,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:5000/api';
+        const API_BASE = window.location.origin + '/api';
         let currentProduct = null;
         let currentImages = [];
 
@@ -400,7 +434,7 @@
                 }
                 
                 const data = await response.json();
-                currentProduct = data.product;
+                currentProduct = data;
                 currentImages = currentProduct.images || [];
                 
                 populateForm();
@@ -449,6 +483,17 @@
             document.getElementById('totalCopies').value = currentProduct.totalCopies || '';
             document.getElementById('endDate').value = currentProduct.endDate || '';
             
+            // Populate inventory fields
+            document.getElementById('soldCopies').value = currentProduct.soldCopies || 0;
+            document.getElementById('isSoldOut').checked = currentProduct.isSoldOut || false;
+            document.getElementById('waitlistCount').value = (currentProduct.waitlistEmails || []).length;
+            
+            // Calculate remaining copies
+            const totalCopies = currentProduct.totalCopies || 0;
+            const soldCopies = currentProduct.soldCopies || 0;
+            const remainingCopies = Math.max(0, totalCopies - soldCopies);
+            document.getElementById('remainingCopies').value = remainingCopies;
+            
             // Show/hide limited edition fields
             toggleLimitedEditionFields();
         }
@@ -461,8 +506,10 @@
             currentImages.forEach((image, index) => {
                 const div = document.createElement('div');
                 div.className = 'preview-image';
+                // Handle both Firebase Storage URLs and local URLs
+                const imageUrl = image.url || image;
                 div.innerHTML = `
-                    <img src="http://localhost:5000${image.url}" alt="Product image ${index + 1}">
+                    <img src="${imageUrl}" alt="Product image ${index + 1}">
                     <button type="button" class="remove-image" onclick="removeCurrentImage(${index})">×</button>
                 `;
                 grid.appendChild(div);
@@ -556,6 +603,9 @@
                 formData.append('totalCopies', form.totalCopies.value);
                 formData.append('endDate', form.endDate.value);
             }
+            
+            // Add current images (after removals)
+            formData.append('currentImages', JSON.stringify(currentImages));
             
             // Add new images
             const imageFiles = form.images.files;

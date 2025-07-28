@@ -19,7 +19,9 @@ import ArtistProfile from './pages/ArtistProfile';
 import ProductDetail from './pages/ProductDetail';
 import Login from './pages/Login';
 import Cart from './pages/Cart';
+import Favorites from './pages/Favorites';
 import { CartProvider } from './contexts/CartContext';
+import { FavoritesProvider } from './contexts/FavoritesContext';
 
 // Create theme
 const theme = createTheme({
@@ -35,7 +37,8 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Open Sans", "Roboto", "Helvetica", "Arial", sans-serif',
+    letterSpacing: '-0.06em',
     h1: {
       fontWeight: 700,
     },
@@ -53,26 +56,29 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <CartProvider>
-      <Router>
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-          <Navbar />
-          <Box component="main" sx={{ flexGrow: 1 }}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/artists" element={<Artists />} />
-              <Route path="/fanhub" element={<FanHub />} />
-              <Route path="/limited-drops" element={<LimitedDrops />} />
-              <Route path="/submit" element={<SubmitWork />} />
-              <Route path="/artist/:id" element={<ArtistProfile />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/cart" element={<Cart />} />
-            </Routes>
-          </Box>
-          <Footer />
-        </Box>
-      </Router>
+        <FavoritesProvider>
+          <Router>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <Navbar />
+              <Box component="main" sx={{ flexGrow: 1 }}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/shop" element={<Shop />} />
+                  <Route path="/artists" element={<Artists />} />
+                  <Route path="/fanhub" element={<FanHub />} />
+                  <Route path="/limited-drops" element={<LimitedDrops />} />
+                  <Route path="/submit" element={<SubmitWork />} />
+                  <Route path="/artist/:id" element={<ArtistProfile />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                </Routes>
+              </Box>
+              <Footer />
+            </Box>
+          </Router>
+        </FavoritesProvider>
       </CartProvider>
     </ThemeProvider>
   );

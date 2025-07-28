@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../config';
 import {
   Box,
   Container,
@@ -20,10 +21,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Favorite,
+  FavoriteBorder,
   LocalOffer,
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useFavorites } from '../contexts/FavoritesContext';
 import { auth } from '../firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
 import Dialog from '@mui/material/Dialog';
@@ -40,8 +43,10 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { cart, addToCart, updateQuantity } = useCart();
+  const { favorites, toggleFavorite, isInFavorites } = useFavorites();
   const [user, setUser] = useState(null);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [favoritesLoginDialogOpen, setFavoritesLoginDialogOpen] = useState(false);
   const navigate = useNavigate();
   const [addedProduct, setAddedProduct] = useState(null);
 
@@ -62,7 +67,7 @@ const Home = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
         
-        const response = await fetch('https://fanpuri-app-1.onrender.com/api/products/featured', {
+        const response = await fetch(`${API_BASE_URL}/api/products/featured`, {
           signal: controller.signal
         });
         
@@ -78,17 +83,25 @@ const Home = () => {
           console.log('Raw product from backend:', product); // Debug log
           // Get artist name from populated artist object
           const artistName = product.artist?.name || 'Unknown Artist';
+          const isArtistVerified = product.artist?.isVerified || false;
           
           return {
             id: product.id,
             name: product.name || 'Untitled Product',
             artist: artistName,
+            isArtistVerified: isArtistVerified,
             price: product.price,
             originalPrice: product.originalPrice,
             image: product.images && product.images.length > 0 ? product.images[0].url : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop',
             fandom: product.category,
             rating: product.rating || 4.5,
             reviews: product.reviewCount || 0,
+            // Limited edition data
+            isLimitedEdition: product.isLimitedEdition || false,
+            isSoldOut: product.isSoldOut || false,
+            totalCopies: product.totalCopies || 0,
+            soldCopies: product.soldCopies || 0,
+            remainingCopies: Math.max(0, (product.totalCopies || 0) - (product.soldCopies || 0)),
           };
         });
         
@@ -484,37 +497,148 @@ const Home = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        // Add to wishlist functionality here
-                        console.log('Added to wishlist:', product.name);
+                        if (!user) {
+                          setFavoritesLoginDialogOpen(true);
+                        } else {
+                          toggleFavorite(product);
+                        }
                       }}
                       sx={{
                         position: 'absolute',
                             top: 12,
                             right: 12,
                             bgcolor: 'rgba(255,255,255,0.95)',
+                        zIndex: 10,
+                        width: 40,
+                        height: 40,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                         '&:hover': {
                           bgcolor: 'rgba(255,255,255,1)',
+                          transform: 'scale(1.05)',
                         },
+                        transition: 'all 0.2s ease',
                       }}
                     >
-                          <Favorite fontSize="medium" />
+                      {isInFavorites(product.id) ? (
+                        <Favorite 
+                          sx={{ 
+                            color: '#e74c3c',
+                            fontSize: '20px',
+                          }} 
+                        />
+                      ) : (
+                        <FavoriteBorder 
+                          sx={{ 
+                            color: '#000',
+                            fontSize: '20px',
+                          }} 
+                        />
+                      )}
                     </IconButton>
-                    {/* Category Badge */}
-                    <Chip
-                      label={product.fandom}
-                      size="small"
+                    {/* Category Badge - Removed to make room for Limited Edition Banner */}
+
+                    {/* Limited Edition Banner */}
+                    {product.isLimitedEdition && (
+                      <>
+                        {/* Custom Limited Edition Banner */}
+                        <Box
                       sx={{
                         position: 'absolute',
-                            top: 12,
-                            left: 12,
-                            bgcolor: '#000',
+                            top: 0,
+                            left: '8px',
+                            zIndex: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                          }}
+                        >
+                          {/* Banner Background */}
+                          <Box
+                            component="img"
+                            src="/assets/limited banner rectangle.svg"
+                            alt="Limited Edition"
+                            sx={{
+                              width: '25px',
+                              height: 'auto',
+                            }}
+                          />
+                          
+                          {/* Icon */}
+                          <Box
+                            component="img"
+                            src="/assets/limited icon.svg"
+                            alt="Limited Icon"
+                            sx={{
+                              position: 'absolute',
+                              top: '10%',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              width: '18px',
+                              height: '18px',
+                              zIndex: 3,
+                            }}
+                          />
+                          
+                          {/* Text */}
+                          <Typography
+                            sx={{
+                              position: 'absolute',
+                              top: '50%',
+                              left: '50%',
+                              transform: 'translateX(-50%) rotate(90deg)',
+                              fontFamily: '"Open Sans", sans-serif',
+                              fontWeight: 800,
+                              fontSize: '16px',
+                              color: '#000',
+                              textTransform: 'uppercase',
+                              letterSpacing: '-0.06em',
+                              lineHeight: 1,
+                              zIndex: 3,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            LIMITED
+                          </Typography>
+                        </Box>
+
+                        {/* Sold Out Overlay */}
+                        {product.isSoldOut && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              bgcolor: 'rgba(0,0,0,0.7)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              zIndex: 3,
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                bgcolor: '#d32f2f',
                             color: 'white',
+                                px: 3,
+                                py: 1.5,
+                                borderRadius: '8px',
+                                fontSize: '1rem',
                             fontWeight: 700,
-                            fontSize: '0.75rem',
-                            height: 24,
-                            borderRadius: '12px',
-                      }}
-                    />
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                              }}
+                            >
+                              SOLD OUT
+                            </Box>
+                          </Box>
+                        )}
+
+                        {/* Remaining Copies Indicator - Removed from image overlay */}
+                      </>
+                    )}
                   </Box>
                   
                       {/* Product Details - Funko Style */}
@@ -538,6 +662,7 @@ const Home = () => {
                           justifyContent: 'space-between'
                         }}>
                           {/* Artist Name - Above Title in CAPS */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <Typography 
                       variant="caption" 
                       color="text.secondary" 
@@ -553,6 +678,18 @@ const Home = () => {
                           >
                             {product.artist}
                     </Typography>
+                            {product.isArtistVerified && (
+                                                              <img
+                                  src="/assets/verified_24dp_1976D2_FILL1_wght400_GRAD0_opsz24.svg"
+                                  alt="Verified Artist"
+                                  style={{
+                                    width: '12px',
+                                    height: '12px',
+                                    marginBottom: '2px'
+                                  }}
+                                />
+                            )}
+                          </Box>
 
                           {/* Product Name - Larger */}
                     <Typography 
@@ -574,6 +711,26 @@ const Home = () => {
                     >
                             {product.name || 'Untitled Product'}
                     </Typography>
+
+                          {/* Limited Stock Indicator - Below Product Title */}
+                          {product.isLimitedEdition && !product.isSoldOut && product.remainingCopies > 0 && product.remainingCopies <= 10 && (
+                            <Typography
+                              sx={{
+                                fontFamily: '"Open Sans", sans-serif',
+                                fontWeight: 800,
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                                color: '#1976d2',
+                                textAlign: 'left',
+                                letterSpacing: '-0.06em',
+                                lineHeight: 1,
+                                mb: 0.5,
+                                
+                                
+                              }}
+                            >
+                              Only {product.remainingCopies} Left!
+                            </Typography>
+                          )}
 
                           {/* Price with Original Price */}
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -683,6 +840,30 @@ const Home = () => {
                           ))}
                         </Select>
                       </Button>
+                    ) : product.isSoldOut ? (
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        disabled
+                        sx={{
+                          bgcolor: '#9e9e9e',
+                          color: 'white',
+                          textTransform: 'uppercase',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          py: 1.2,
+                          borderRadius: '50px',
+                          letterSpacing: '0.5px',
+                          boxShadow: 'none',
+                          cursor: 'not-allowed',
+                          '&:hover': {
+                            bgcolor: '#9e9e9e',
+                          },
+                        }}
+                      >
+                        SOLD OUT
+                      </Button>
                     ) : (
                       <Button
                         onClick={(e) => {
@@ -775,6 +956,18 @@ const Home = () => {
               <DialogActions>
                 <Button onClick={() => setLoginDialogOpen(false)} color="secondary">Cancel</Button>
                 <Button onClick={() => { setLoginDialogOpen(false); window.location.href = '/login'; }} color="primary" variant="contained">Login / Signup</Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* Favorites Login Dialog */}
+            <Dialog open={favoritesLoginDialogOpen} onClose={() => setFavoritesLoginDialogOpen(false)}>
+              <DialogTitle>Login Required</DialogTitle>
+              <DialogContent>
+                Please login or sign up to add items to your favorites.
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setFavoritesLoginDialogOpen(false)} color="secondary">Cancel</Button>
+                <Button onClick={() => { setFavoritesLoginDialogOpen(false); window.location.href = '/login'; }} color="primary" variant="contained">Login / Signup</Button>
               </DialogActions>
             </Dialog>
             {/* Add to Cart Confirmation Modal */}
