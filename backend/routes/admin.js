@@ -136,6 +136,25 @@ router.patch('/products/:id/toggle-active', async (req, res) => {
   }
 });
 
+// Delete product
+router.delete('/products/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    await Product.findByIdAndDelete(req.params.id);
+    
+    res.json({ 
+      message: 'Product deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting product', error: error.message });
+  }
+});
+
 // Toggle artist verification status
 router.patch('/artists/:id/toggle-verification', async (req, res) => {
   try {
@@ -154,6 +173,29 @@ router.patch('/artists/:id/toggle-verification', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error toggling artist verification', error: error.message });
+  }
+});
+
+// Delete artist
+router.delete('/artists/:id', async (req, res) => {
+  try {
+    const artist = await Artist.findById(req.params.id);
+    
+    if (!artist) {
+      return res.status(404).json({ message: 'Artist not found' });
+    }
+    
+    // Delete all products associated with this artist
+    await Product.deleteMany({ artist: artist._id });
+    
+    // Delete the artist
+    await Artist.findByIdAndDelete(req.params.id);
+    
+    res.json({ 
+      message: 'Artist and all associated products deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting artist', error: error.message });
   }
 });
 
