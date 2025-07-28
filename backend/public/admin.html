@@ -489,6 +489,18 @@
             transform: translateX(5px);
         }
 
+        .search-result-item img {
+            flex-shrink: 0;
+        }
+
+        .search-result-item .search-result-title {
+            margin-bottom: 8px;
+        }
+
+        .search-result-item .search-result-details {
+            margin-bottom: 12px;
+        }
+
         .search-result-title {
             font-weight: 600;
             color: #333;
@@ -1230,22 +1242,36 @@
         // Create search result item
         function createSearchResultItem(item) {
             if (item.type === 'product') {
+                // Get the first image URL or use a placeholder
+                const imageUrl = item.images && item.images.length > 0 ? item.images[0].url : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=500&fit=crop';
+                
                 return `
                     <div class="search-result-item">
-                        <div class="search-result-title">${item.name}</div>
-                        <div class="search-result-details">
-                            <strong>Artist:</strong> ${item.artist?.name || 'Unknown'} | 
-                            <strong>Category:</strong> ${item.category || 'N/A'} | 
-                            <strong>Price:</strong> ₹${item.price || 'N/A'}
-                            ${item.isLimitedEdition ? ' | <strong>Limited Edition</strong>' : ''}
-                            ${item.isFeatured ? ' | <strong>Featured</strong>' : ''}
-                        </div>
-                        <div class="search-result-actions">
-                            <button onclick="editProduct('${item.id}')" class="btn btn-primary">Edit</button>
-                            <button onclick="confirmRemoveProduct('${item.id}', '${item.name}')" class="btn btn-danger">Remove</button>
-                            <button onclick="toggleFeatured('${item.id}', ${item.isFeatured})" class="btn btn-secondary">
-                                ${item.isFeatured ? 'Unfeature' : 'Feature'}
-                            </button>
+                        <div style="display: flex; gap: 15px; align-items: flex-start;">
+                            <img src="${imageUrl}" alt="${item.name}" style="
+                                width: 80px; 
+                                height: 80px; 
+                                object-fit: cover; 
+                                border-radius: 8px; 
+                                border: 2px solid #e5e7eb;
+                            ">
+                            <div style="flex: 1;">
+                                <div class="search-result-title">${item.name}</div>
+                                <div class="search-result-details">
+                                    <strong>Artist:</strong> ${item.artist?.name || 'Unknown'} | 
+                                    <strong>Category:</strong> ${item.category || 'N/A'} | 
+                                    <strong>Price:</strong> ₹${item.price || 'N/A'}
+                                    ${item.isLimitedEdition ? ' | <strong>Limited Edition</strong>' : ''}
+                                    ${item.isFeatured ? ' | <strong>Featured</strong>' : ''}
+                                </div>
+                                <div class="search-result-actions">
+                                    <button onclick="editProduct('${item.id}')" class="btn btn-primary">Edit</button>
+                                    <button onclick="confirmRemoveProduct('${item.id}', '${item.name}')" class="btn btn-danger">Remove</button>
+                                    <button onclick="toggleFeatured('${item.id}', ${item.isFeatured})" class="btn btn-secondary">
+                                        ${item.isFeatured ? 'Unfeature' : 'Feature'}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
