@@ -688,6 +688,93 @@ app.patch('/api/admin/artists/:id/toggle-verification', async (req, res) => {
   }
 });
 
+// Delete artist
+app.delete('/api/admin/artists/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const artistDoc = await db.collection('artists').doc(id).get();
+    
+    if (!artistDoc.exists) {
+      return res.status(404).json({ message: 'Artist not found' });
+    }
+    
+    // Delete all products associated with this artist
+    const productsSnapshot = await db.collection('products')
+      .where('artist', '==', id)
+      .get();
+    
+    // Delete product images from Firebase Storage
+    for (const productDoc of productsSnapshot.docs) {
+      const product = productDoc.data();
+      if (product.images && Array.isArray(product.images)) {
+        for (const image of product.images) {
+          if (image.filename) {
+            try {
+              await bucket.file(image.filename).delete();
+            } catch (error) {
+              console.error('Error deleting image:', error);
+            }
+          }
+        }
+      }
+    }
+    
+    // Delete all products associated with this artist
+    const batch = db.batch();
+    productsSnapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+    
+    // Delete the artist
+    await deleteFromCollection('artists', id);
+    
+    res.json({ 
+      message: 'Artist and all associated products deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting artist:', error);
+    res.status(500).json({ message: 'Error deleting artist', error: error.message });
+  }
+});
+
+// Delete product
+app.delete('/api/admin/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const productDoc = await db.collection('products').doc(id).get();
+    
+    if (!productDoc.exists) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    const product = productDoc.data();
+    
+    // Delete product images from Firebase Storage
+    if (product.images && Array.isArray(product.images)) {
+      for (const image of product.images) {
+        if (image.filename) {
+          try {
+            await bucket.file(image.filename).delete();
+          } catch (error) {
+            console.error('Error deleting image:', error);
+          }
+        }
+      }
+    }
+    
+    // Delete product from Firestore
+    await deleteFromCollection('products', id);
+    
+    res.json({ 
+      message: 'Product deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({ message: 'Error deleting product', error: error.message });
+  }
+});
+
 // Purchase limited edition product
 app.post('/api/products/:id/purchase', async (req, res) => {
   try {
