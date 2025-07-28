@@ -37,6 +37,14 @@ const upload = multer({
 async function uploadImageToFirebase(file, folder = 'products') {
   try {
     console.log('Uploading image to Firebase Storage:', file.originalname);
+    console.log('File size:', file.size, 'bytes');
+    console.log('File type:', file.mimetype);
+    console.log('Bucket name:', bucket.name);
+    
+    if (!file.buffer || file.buffer.length === 0) {
+      throw new Error('File buffer is empty or undefined');
+    }
+    
     const fileName = `${folder}/${uuidv4()}-${file.originalname}`;
     const fileUpload = bucket.file(fileName);
     
@@ -48,29 +56,38 @@ async function uploadImageToFirebase(file, folder = 'products') {
 
     return new Promise((resolve, reject) => {
       blobStream.on('error', (error) => {
+        console.error('Blob stream error:', error);
         reject(error);
       });
 
       blobStream.on('finish', async () => {
-        // Make the file public
-        await fileUpload.makePublic();
-        
-        // Get the public URL
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-        
-        resolve({
-          id: uuidv4(),
-          filename: fileName,
-          url: publicUrl,
-          uploadedAt: new Date().toISOString(),
-        });
+        try {
+          // Make the file public
+          await fileUpload.makePublic();
+          
+          // Get the public URL
+          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+          
+          console.log('File uploaded successfully:', fileName);
+          console.log('Public URL:', publicUrl);
+          
+          resolve({
+            id: uuidv4(),
+            filename: fileName,
+            url: publicUrl,
+            uploadedAt: new Date().toISOString(),
+          });
+        } catch (publicError) {
+          console.error('Error making file public:', publicError);
+          reject(publicError);
+        }
       });
 
       blobStream.end(file.buffer);
     });
   } catch (error) {
     console.error('Firebase Storage upload error:', error);
-    throw new Error('Error uploading image to Firebase Storage');
+    throw new Error(`Error uploading image to Firebase Storage: ${error.message}`);
   }
 }
 
@@ -285,10 +302,23 @@ app.post('/api/upload/product', upload.array('images', 5), async (req, res) => {
     // Upload images to Firebase Storage
     let images = [];
     if (req.files && req.files.length > 0) {
+      console.log('Processing', req.files.length, 'image files');
       for (const file of req.files) {
-        const imageData = await uploadImageToFirebase(file, 'products');
-        images.push(imageData);
+        try {
+          console.log('Uploading file:', file.originalname, 'Size:', file.size, 'Type:', file.mimetype);
+          const imageData = await uploadImageToFirebase(file, 'products');
+          images.push(imageData);
+          console.log('Successfully uploaded:', file.originalname);
+        } catch (uploadError) {
+          console.error('Failed to upload file:', file.originalname, uploadError);
+          return res.status(500).json({ 
+            message: `Failed to upload image: ${file.originalname}`, 
+            error: uploadError.message 
+          });
+        }
       }
+    } else {
+      console.log('No image files received');
     }
 
     // Create product
@@ -788,6 +818,42 @@ app.get('/test-uploads', (req, res) => {
       path: uploadsPath
     });
   }
+});
+
+// Test Firebase Storage connection
+app.get('/test-firebase-storage', async (req, res) => {
+  try {
+    console.log('Testing Firebase Storage connection...');
+    console.log('Bucket name:', bucket.name);
+    
+    // Try to list files in the bucket
+    const [files] = await bucket.getFiles({ maxResults: 1 });
+    console.log('Successfully connected to Firebase Storage');
+    
+    res.json({ 
+      message: 'Firebase Storage connection successful',
+      bucket: bucket.name,
+      filesCount: files.length,
+      bucketExists: !!bucket
+    });
+  } catch (error) {
+    console.error('Firebase Storage connection test failed:', error);
+    res.status(500).json({ 
+      message: 'Firebase Storage connection failed',
+      error: error.message,
+      bucket: bucket ? bucket.name : 'undefined'
+    });
+  }
+});
+
+// Upload status endpoint
+app.get('/api/upload/status', (req, res) => {
+  res.json({ 
+    message: 'Upload service is running',
+    bucket: bucket.name,
+    firebaseConfigured: !!bucket,
+    multerConfigured: !!upload
+  });
 });
 
 // Error handling middleware

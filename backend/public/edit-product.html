@@ -608,7 +608,7 @@
             formData.append('currentImages', JSON.stringify(currentImages));
             
             // Add new images
-            const imageFiles = form.images.files;
+            const imageFiles = form.newImages.files;
             Array.from(imageFiles).forEach(file => {
                 formData.append('images', file);
             });
