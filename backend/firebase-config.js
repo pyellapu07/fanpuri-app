@@ -27,7 +27,7 @@ try {
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'fanpuri-107aa.appspot.com'
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'fanpuri-107aa.firebasestorage.app'
   });
 }
 
