@@ -30,7 +30,7 @@ const steps = ['Shipping Details', 'Payment', 'Review & Confirm'];
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { cartItems, clearCart, getTotalPrice } = useCart();
+  const { cart, clearCart, getTotalPrice } = useCart();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -75,10 +75,10 @@ const Checkout = () => {
 
   useEffect(() => {
     // Redirect if cart is empty
-    if (cartItems.length === 0) {
+    if (cart.length === 0) {
       navigate('/cart');
     }
-  }, [cartItems, navigate]);
+  }, [cart, navigate]);
 
   const calculateOrderSummary = () => {
     const subtotal = getTotalPrice();
@@ -91,7 +91,7 @@ const Checkout = () => {
       shipping,
       tax,
       total,
-      itemCount: cartItems.length
+      itemCount: cart.length
     };
   };
 
@@ -134,7 +134,7 @@ const Checkout = () => {
       const orderData = {
         userId: user.uid,
         userEmail: user.email,
-        items: cartItems,
+        items: cart,
         shippingDetails,
         paymentMethod,
         paymentId,
@@ -332,7 +332,7 @@ const Checkout = () => {
               <Typography variant="h6" gutterBottom>
                 Order Items ({orderSummary.itemCount})
               </Typography>
-              {cartItems.map((item, index) => (
+              {cart.map((item, index) => (
                 <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                   <Box>
                     <Typography variant="body1">{item.name}</Typography>
