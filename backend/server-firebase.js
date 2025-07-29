@@ -1157,6 +1157,44 @@ app.get('/api/admin/orders', async (req, res) => {
   }
 });
 
+// Simple test endpoint to check basic functionality
+app.get('/api/debug', async (req, res) => {
+  try {
+    console.log('Debug endpoint called');
+    
+    // Test basic Firebase connection
+    const testDoc = await db.collection('test').doc('debug').get();
+    console.log('Firestore connection: OK');
+    
+    // Test bucket access
+    const bucketName = bucket.name;
+    console.log('Storage bucket name:', bucketName);
+    
+    // Test if we can list files (this requires Storage permissions)
+    try {
+      const [files] = await bucket.getFiles({ maxResults: 1 });
+      console.log('Storage list files: OK');
+    } catch (storageError) {
+      console.log('Storage list files failed:', storageError.message);
+    }
+    
+    res.json({
+      message: 'Debug info',
+      firestore: 'Connected',
+      storage_bucket: bucketName,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    console.error('Debug endpoint error:', error);
+    res.status(500).json({
+      message: 'Debug failed',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Test endpoint for debugging
 app.get('/api/test', async (req, res) => {
   try {
@@ -1211,6 +1249,63 @@ app.get('/api/test-storage', async (req, res) => {
     console.error('Firebase Storage test failed:', error);
     res.status(500).json({ 
       message: 'Firebase Storage test failed', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test simple text file upload (no image processing)
+app.post('/api/test-text-upload', async (req, res) => {
+  try {
+    console.log('Testing simple text file upload');
+    
+    // Create a simple text file in memory
+    const testContent = 'This is a test file for Firebase Storage';
+    const testFileName = `test/text-upload-${Date.now()}.txt`;
+    
+    const file = bucket.file(testFileName);
+    
+    console.log('Attempting to upload text file:', testFileName);
+    
+    // Upload the text content
+    await file.save(testContent, {
+      metadata: {
+        contentType: 'text/plain',
+      }
+    });
+    
+    console.log('Text file uploaded successfully');
+    
+    // Try to make it public
+    try {
+      await file.makePublic();
+      console.log('Text file made public');
+    } catch (publicError) {
+      console.log('Could not make text file public:', publicError.message);
+    }
+    
+    // Get the URL
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${testFileName}`;
+    
+    // Clean up - delete the test file
+    try {
+      await file.delete();
+      console.log('Test text file cleaned up');
+    } catch (deleteError) {
+      console.log('Could not delete test file:', deleteError.message);
+    }
+    
+    res.json({
+      message: 'Text file upload test successful',
+      fileName: testFileName,
+      url: publicUrl,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Text file upload test failed:', error);
+    res.status(500).json({
+      message: 'Text file upload test failed',
       error: error.message,
       timestamp: new Date().toISOString()
     });
