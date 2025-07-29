@@ -5,12 +5,14 @@ import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, provider } from '../firebase-config';
 import API_BASE_URL from '../config';
 import { useCart } from '../contexts/CartContext';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [user, setUser] = useState(() => auth.currentUser);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { clearCart } = useCart();
+  const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -18,6 +20,8 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
+      // Redirect to home after successful login
+      navigate('/');
       console.log('Login successful:', result.user);
       
       // Check if this is a new user (first time signing in)
@@ -118,6 +122,12 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f3f3f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

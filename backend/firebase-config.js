@@ -27,8 +27,8 @@ try {
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    // Use the correct storage bucket name that matches the frontend
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.firebasestorage.app`
+    // Hardcode the correct storage bucket name to ensure it always works
+    storageBucket: 'fanpuri-107aa.firebasestorage.app'
   });
 }
 

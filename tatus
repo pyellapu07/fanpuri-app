@@ -1,0 +1,5 @@
+[33m344ae51[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix Firebase Storage bucket configuration - resolve image upload 404 error
+[33m5245ce2[m Fix Firebase bucket: Use automatic bucket detection with project ID
+[33ma9ed327[m Add comprehensive global error handler to catch and log 500 errors
+[33mc7b4405[m Fix Firebase Storage bucket name: Use correct firebasestorage.app format
+[33m189abef[m Add debugging endpoints to isolate Firebase Storage upload issues
