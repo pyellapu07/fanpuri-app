@@ -27,8 +27,8 @@ try {
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    // Let Firebase determine the correct bucket name automatically
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.appspot.com`
+    // Use the correct storage bucket name that matches the frontend
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.firebasestorage.app`
   });
 }
 
