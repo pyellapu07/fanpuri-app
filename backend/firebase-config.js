@@ -27,7 +27,8 @@ try {
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'fanpuri-107aa.firebasestorage.app'
+    // Let Firebase determine the correct bucket name automatically
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.appspot.com`
   });
 }
 
