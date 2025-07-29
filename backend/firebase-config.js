@@ -27,12 +27,18 @@ try {
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'fanpuri-107aa.firebasestorage.app'
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'fanpuri-107aa.appspot.com'
   });
 }
 
 const db = admin.firestore();
 const storage = admin.storage();
 const bucket = storage.bucket();
+
+// Log Firebase configuration for debugging
+console.log('Firebase initialized with:');
+console.log('- Project ID:', serviceAccount.project_id);
+console.log('- Storage Bucket:', bucket.name);
+console.log('- Firestore initialized:', !!db);
 
 module.exports = { admin, db, storage, bucket }; 

@@ -27,13 +27,36 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (req, file, cb) => {
+    console.log('Multer processing file:', file.originalname, 'Type:', file.mimetype);
+    
     if (file.mimetype.startsWith('image/')) {
+      console.log('File accepted by multer');
       cb(null, true);
     } else {
+      console.log('File rejected by multer - not an image');
       cb(new Error('Only image files are allowed!'), false);
     }
   },
-});
+}).array('images', 5);
+
+// Wrapper for multer to handle errors
+const uploadMiddleware = (req, res, next) => {
+  upload(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      console.error('Multer error:', err);
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: 'File too large. Maximum size is 5MB.' });
+      }
+      return res.status(400).json({ message: `Upload error: ${err.message}` });
+    } else if (err) {
+      console.error('Upload error:', err);
+      return res.status(400).json({ message: err.message });
+    }
+    
+    console.log('Multer processing completed. Files:', req.files ? req.files.length : 0);
+    next();
+  });
+};
 
 // Helper function to upload image to Firebase Storage
 async function uploadImageToFirebase(file, folder = 'products') {
@@ -311,7 +334,7 @@ app.get('/api/artists', async (req, res) => {
 });
 
 // Upload product with images
-app.post('/api/upload/product', upload.array('images', 5), async (req, res) => {
+app.post('/api/upload/product', uploadMiddleware, async (req, res) => {
   try {
     const {
       name,
@@ -538,7 +561,7 @@ app.patch('/api/products/:id', async (req, res) => {
 });
 
 // Update product in admin (PUT endpoint)
-app.put('/api/admin/products/:id', upload.array('images', 5), async (req, res) => {
+app.put('/api/admin/products/:id', uploadMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -1162,9 +1185,26 @@ app.get('/api/test-storage', async (req, res) => {
     const bucketName = bucket.name;
     console.log('Firebase Storage bucket:', bucketName);
     
+    // Test creating a simple file
+    const testFileName = 'test/connection-test.txt';
+    const testFile = bucket.file(testFileName);
+    
+    await testFile.save('Firebase Storage connection test', {
+      metadata: {
+        contentType: 'text/plain',
+      }
+    });
+    
+    console.log('Test file created successfully');
+    
+    // Clean up - delete the test file
+    await testFile.delete();
+    console.log('Test file cleaned up');
+    
     res.json({ 
       message: 'Firebase Storage is working',
       bucket: bucketName,
+      test: 'File creation and deletion successful',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -1178,16 +1218,16 @@ app.get('/api/test-storage', async (req, res) => {
 });
 
 // Test Firebase Storage upload with a simple text file
-app.post('/api/test-upload', upload.single('testFile'), async (req, res) => {
+app.post('/api/test-upload', uploadMiddleware, async (req, res) => {
   try {
-    if (!req.file) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
     
-    console.log('Testing upload with file:', req.file.originalname);
+    console.log('Testing upload with file:', req.files[0].originalname);
     
     // Try to upload to Firebase Storage
-    const result = await uploadImageToFirebase(req.file, 'test');
+    const result = await uploadImageToFirebase(req.files[0], 'test');
     
     res.json({
       message: 'Test upload successful',
