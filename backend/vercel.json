@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server-firebase.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server-firebase.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

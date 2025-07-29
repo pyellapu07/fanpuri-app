@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Card, CardContent, Typography, Button, Avatar, CircularProgress } from '@mui/material';
 import { Google as GoogleIcon } from '@mui/icons-material';
-import { signInWithPopup, signOut } from 'firebase/auth';
+import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, provider } from '../firebase-config';
+import API_BASE_URL from '../config';
 import { useCart } from '../contexts/CartContext';
 
 const Login = () => {
@@ -41,7 +42,7 @@ const Login = () => {
         try {
           console.log('📡 Attempting to call backend registration API...');
           
-          const response = await fetch('http://localhost:5000/api/auth/register', {
+          const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
