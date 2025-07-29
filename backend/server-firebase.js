@@ -502,50 +502,77 @@ app.put('/api/admin/products/:id', upload.array('images', 5), async (req, res) =
 
     console.log('Admin updating product with ID:', id);
     console.log('Update data:', { name, artistName, category, isNewArtist, currentImages });
+    console.log('Files uploaded:', req.files ? req.files.length : 0);
+
+    // Validate required fields
+    if (!name || !price || !category) {
+      return res.status(400).json({ message: 'Name, price, and category are required' });
+    }
 
     // Handle artist selection
     let artist;
-    if (isNewArtist === 'true') {
-      // Create new artist
-      artist = {
-        name: artistName,
-        username: artistName.toLowerCase().replace(/\s+/g, ''),
-        email: `${artistName.toLowerCase().replace(/\s+/g, '')}@fanpuri.com`,
-        bio: `Artist specializing in ${category} fan art`,
-        specialties: [category],
-        isVerified: false,
-        totalSales: 0,
-        rating: 0,
-        reviewCount: 0,
-        joinDate: new Date().toISOString()
-      };
-      const newArtist = await addToCollection('artists', artist);
-      artist = newArtist;
-    } else {
-      // Use existing artist
-      const artistDoc = await db.collection('artists').doc(artistId).get();
-      if (!artistDoc.exists) {
-        return res.status(400).json({ message: 'Selected artist not found' });
+    try {
+      if (isNewArtist === 'true') {
+        // Create new artist
+        artist = {
+          name: artistName,
+          username: artistName.toLowerCase().replace(/\s+/g, ''),
+          email: `${artistName.toLowerCase().replace(/\s+/g, '')}@fanpuri.com`,
+          bio: `Artist specializing in ${category} fan art`,
+          specialties: [category],
+          isVerified: false,
+          totalSales: 0,
+          rating: 0,
+          reviewCount: 0,
+          joinDate: new Date().toISOString()
+        };
+        const newArtist = await addToCollection('artists', artist);
+        artist = newArtist;
+        console.log('Created new artist:', artist);
+      } else {
+        // Use existing artist
+        const artistDoc = await db.collection('artists').doc(artistId).get();
+        if (!artistDoc.exists) {
+          return res.status(400).json({ message: 'Selected artist not found' });
+        }
+        artist = { id: artistDoc.id, ...artistDoc.data() };
+        console.log('Using existing artist:', artist);
       }
-      artist = { id: artistDoc.id, ...artistDoc.data() };
+    } catch (artistError) {
+      console.error('Error handling artist:', artistError);
+      return res.status(500).json({ message: 'Error handling artist', error: artistError.message });
     }
 
     // Handle new images if uploaded
     let newImages = [];
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const imageData = await uploadImageToFirebase(file, 'products');
-        newImages.push(imageData);
+    try {
+      if (req.files && req.files.length > 0) {
+        console.log('Processing uploaded files...');
+        for (const file of req.files) {
+          console.log('Uploading file:', file.originalname);
+          const imageData = await uploadImageToFirebase(file, 'products');
+          newImages.push(imageData);
+          console.log('File uploaded successfully:', imageData);
+        }
       }
+    } catch (imageError) {
+      console.error('Error uploading images:', imageError);
+      return res.status(500).json({ message: 'Error uploading images', error: imageError.message });
     }
 
     // Get existing product data
-    const existingProduct = await db.collection('products').doc(id).get();
-    if (!existingProduct.exists) {
-      return res.status(404).json({ message: 'Product not found' });
+    let existingData;
+    try {
+      const existingProduct = await db.collection('products').doc(id).get();
+      if (!existingProduct.exists) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      existingData = existingProduct.data();
+      console.log('Existing product data retrieved');
+    } catch (fetchError) {
+      console.error('Error fetching existing product:', fetchError);
+      return res.status(500).json({ message: 'Error fetching existing product', error: fetchError.message });
     }
-
-    const existingData = existingProduct.data();
 
     // Prepare update data
     const updateData = {
@@ -595,14 +622,24 @@ app.put('/api/admin/products/:id', upload.array('images', 5), async (req, res) =
     console.log('Final images count:', finalImages.length);
     updateData.images = finalImages;
 
-    console.log('Updating product with data:', updateData);
-
-    const updatedProduct = await updateInCollection('products', id, updateData);
-    
-    res.json({
-      message: 'Product updated successfully',
-      product: updatedProduct
+    console.log('Updating product with data:', {
+      ...updateData,
+      images: `[${finalImages.length} images]` // Don't log full image data
     });
+
+    // Update the product
+    try {
+      const updatedProduct = await updateInCollection('products', id, updateData);
+      console.log('Product updated successfully');
+      
+      res.json({
+        message: 'Product updated successfully',
+        product: updatedProduct
+      });
+    } catch (updateError) {
+      console.error('Error in updateInCollection:', updateError);
+      throw updateError;
+    }
   } catch (error) {
     console.error('Error updating product in admin:', error);
     console.error('Error details:', error.message);
@@ -1036,6 +1073,49 @@ app.get('/api/admin/orders', async (req, res) => {
   } catch (error) {
     console.error('Error fetching orders:', error);
     res.status(500).json({ message: 'Error fetching orders', error: error.message });
+  }
+});
+
+// Test endpoint for debugging
+app.get('/api/test', async (req, res) => {
+  try {
+    // Test Firebase connection
+    const testDoc = await db.collection('test').doc('connection').get();
+    console.log('Firebase connection test successful');
+    
+    res.json({ 
+      message: 'Backend is working',
+      firebase: 'Connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Backend test failed:', error);
+    res.status(500).json({ 
+      message: 'Backend test failed', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test Firebase Storage connection
+app.get('/api/test-storage', async (req, res) => {
+  try {
+    const bucketName = bucket.name;
+    console.log('Firebase Storage bucket:', bucketName);
+    
+    res.json({ 
+      message: 'Firebase Storage is working',
+      bucket: bucketName,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Firebase Storage test failed:', error);
+    res.status(500).json({ 
+      message: 'Firebase Storage test failed', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
