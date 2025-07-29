@@ -59,7 +59,7 @@ const Cart = () => {
   };
 
   const handleCheckout = () => {
-    setCheckoutDialogOpen(true);
+    navigate('/checkout');
   };
 
   const handleCheckoutConfirm = () => {

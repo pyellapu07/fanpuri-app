@@ -20,6 +20,8 @@ import ProductDetail from './pages/ProductDetail';
 import Login from './pages/Login';
 import Cart from './pages/Cart';
 import Favorites from './pages/Favorites';
+import Checkout from './pages/Checkout';
+import OrderConfirmation from './pages/OrderConfirmation';
 import { CartProvider } from './contexts/CartContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
 
@@ -73,6 +75,8 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
                 </Routes>
               </Box>
               <Footer />

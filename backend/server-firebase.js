@@ -4,7 +4,8 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const { db, bucket } = require('./firebase-config');
-const { sendWelcomeEmail, sendArtistWelcomeEmail, testEmailConfig } = require('./email-service');
+const { sendWelcomeEmail, sendArtistWelcomeEmail, sendOrderConfirmationEmail, testEmailConfig } = require('./email-service');
+const admin = require('firebase-admin'); // Added for order management
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -871,6 +872,170 @@ app.post('/api/products/:id/waitlist', async (req, res) => {
   } catch (error) {
     console.error('Error adding to waitlist:', error);
     res.status(500).json({ message: 'Error adding to waitlist', error: error.message });
+  }
+});
+
+// Orders endpoints
+app.post('/api/orders', async (req, res) => {
+  try {
+    const orderData = req.body;
+    
+    if (!orderData.userId || !orderData.items || orderData.items.length === 0) {
+      return res.status(400).json({ message: 'Invalid order data' });
+    }
+    
+    // Generate unique order ID
+    const orderId = `ORD${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+    
+    // Create order object
+    const order = {
+      orderId,
+      ...orderData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Store order in Firestore
+    await db.collection('orders').doc(orderId).set(order);
+    
+    // Update product sales count
+    for (const item of orderData.items) {
+      try {
+        const productRef = db.collection('products').doc(item.id);
+        await productRef.update({
+          salesCount: admin.firestore.FieldValue.increment(item.quantity)
+        });
+      } catch (error) {
+        console.error('Error updating product sales count:', error);
+      }
+    }
+    
+    // Send order confirmation email
+    try {
+      await sendOrderConfirmationEmail({
+        email: orderData.userEmail,
+        orderId,
+        orderSummary: orderData.orderSummary,
+        shippingDetails: orderData.shippingDetails,
+        items: orderData.items
+      });
+    } catch (emailError) {
+      console.error('⚠️ Order confirmation email failed:', emailError.message);
+    }
+    
+    res.status(201).json({ 
+      message: 'Order created successfully',
+      orderId,
+      order
+    });
+    
+  } catch (error) {
+    console.error('Error creating order:', error);
+    res.status(500).json({ message: 'Error creating order', error: error.message });
+  }
+});
+
+// Get order by ID
+app.get('/api/orders/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    const orderDoc = await db.collection('orders').doc(orderId).get();
+    
+    if (!orderDoc.exists) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    res.json(orderDoc.data());
+    
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({ message: 'Error fetching order', error: error.message });
+  }
+});
+
+// Get user orders
+app.get('/api/orders/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    
+    const ordersQuery = db.collection('orders')
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .limit(limit * 1)
+      .offset((page - 1) * limit);
+    
+    const snapshot = await ordersQuery.get();
+    const orders = snapshot.docs.map(doc => doc.data());
+    
+    res.json({
+      orders,
+      currentPage: parseInt(page),
+      totalOrders: orders.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching user orders:', error);
+    res.status(500).json({ message: 'Error fetching user orders', error: error.message });
+  }
+});
+
+// Update order status (for admin)
+app.patch('/api/orders/:orderId/status', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+    
+    if (!status) {
+      return res.status(400).json({ message: 'Status is required' });
+    }
+    
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+    
+    await db.collection('orders').doc(orderId).update({
+      status,
+      updatedAt: new Date().toISOString()
+    });
+    
+    res.json({ message: 'Order status updated successfully' });
+    
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ message: 'Error updating order status', error: error.message });
+  }
+});
+
+// Get all orders (for admin)
+app.get('/api/admin/orders', async (req, res) => {
+  try {
+    const { page = 1, limit = 20, status } = req.query;
+    
+    let ordersQuery = db.collection('orders').orderBy('createdAt', 'desc');
+    
+    if (status) {
+      ordersQuery = ordersQuery.where('status', '==', status);
+    }
+    
+    const snapshot = await ordersQuery
+      .limit(limit * 1)
+      .offset((page - 1) * limit)
+      .get();
+    
+    const orders = snapshot.docs.map(doc => doc.data());
+    
+    res.json({
+      orders,
+      currentPage: parseInt(page),
+      totalOrders: orders.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ message: 'Error fetching orders', error: error.message });
   }
 });
 
