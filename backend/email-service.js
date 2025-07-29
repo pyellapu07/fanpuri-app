@@ -157,11 +157,11 @@ async function sendWelcomeEmail(userData) {
       userEmail: email,
       joinDate: joinDate,
       logoUrl: 'https://via.placeholder.com/200x80/3b82f6/ffffff?text=FANPURI',
-      shopUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/shop',
-      helpUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/help',
-      contactUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/contact',
-      privacyUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/privacy',
-      termsUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/terms'
+      shopUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/shop',
+      helpUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/help',
+      contactUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/contact',
+      privacyUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/privacy',
+      termsUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/terms'
     };
 
     // Generate HTML content
@@ -305,11 +305,11 @@ async function sendArtistWelcomeEmail(artistData) {
       artistName: name,
       artistEmail: email,
       logoUrl: 'https://via.placeholder.com/200x80/3b82f6/ffffff?text=FANPURI',
-      submitUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/submit',
-      helpUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/help',
-      contactUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/contact',
-      privacyUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/privacy',
-      termsUrl: process.env.FRONTEND_URL || 'https://fanpuri-app.vercel.app/terms'
+      submitUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/submit',
+      helpUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/help',
+      contactUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/contact',
+      privacyUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/privacy',
+      termsUrl: process.env.FRONTEND_URL || 'https://fanpuri-app-1.vercel.app/terms'
     };
 
     const htmlContent = compiledArtistTemplate(templateData);

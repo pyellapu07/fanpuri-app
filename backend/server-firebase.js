@@ -944,6 +944,30 @@ app.get('/api/upload/status', (req, res) => {
   });
 });
 
+// Check if user exists endpoint
+app.get('/api/auth/check-user/:uid', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    
+    if (!uid) {
+      return res.status(400).json({ message: 'User UID is required' });
+    }
+    
+    // Check if user exists in Firestore
+    const userDoc = await db.collection('users').doc(uid).get();
+    
+    if (userDoc.exists) {
+      res.json({ exists: true, user: userDoc.data() });
+    } else {
+      res.json({ exists: false });
+    }
+    
+  } catch (error) {
+    console.error('Error checking user existence:', error);
+    res.status(500).json({ message: 'Error checking user existence', error: error.message });
+  }
+});
+
 // User registration endpoint (for welcome emails)
 app.post('/api/auth/register', async (req, res) => {
   try {

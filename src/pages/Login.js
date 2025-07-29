@@ -33,9 +33,24 @@ const Login = () => {
       console.log('🔍 Full result object:', result);
       console.log('🔍 additionalUserInfo:', result.additionalUserInfo);
       
-      // For now, let's send email for all users to test the system
-      // We can refine this later to only send for truly new users
-      const shouldSendEmail = true; // isNewUser || true;
+      // Check if user exists in our database to determine if they're truly new
+      let shouldSendEmail = false;
+      
+      try {
+        // Check if user already exists in our database
+        const checkResponse = await fetch(`${API_BASE_URL}/api/auth/check-user/${result.user.uid}`);
+        const userExists = await checkResponse.json();
+        
+        if (!userExists.exists) {
+          shouldSendEmail = true;
+          console.log('🆕 New user detected - will send welcome email');
+        } else {
+          console.log('👤 Existing user - no welcome email needed');
+        }
+      } catch (checkError) {
+        console.log('⚠️ Could not check user existence, defaulting to send email');
+        shouldSendEmail = true; // Default to sending email if we can't check
+      }
       
       if (shouldSendEmail) {
         // Send registration data to backend for welcome email
