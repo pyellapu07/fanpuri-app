@@ -43,27 +43,68 @@ async function uploadImageToFirebase(file, folder = 'products') {
     console.log('File type:', file.mimetype);
     console.log('Bucket name:', bucket.name);
     
+    // Validate bucket
+    if (!bucket) {
+      throw new Error('Firebase Storage bucket is not initialized');
+    }
+    
+    // Validate file
+    if (!file) {
+      throw new Error('No file provided');
+    }
+    
     if (!file.buffer || file.buffer.length === 0) {
       throw new Error('File buffer is empty or undefined');
     }
     
+    if (!file.originalname) {
+      throw new Error('File original name is missing');
+    }
+    
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('File size exceeds 5MB limit');
+    }
+    
+    // Validate file type
+    if (!file.mimetype.startsWith('image/')) {
+      throw new Error('Only image files are allowed');
+    }
+    
     const fileName = `${folder}/${uuidv4()}-${file.originalname}`;
+    console.log('Generated file name:', fileName);
+    
     const fileUpload = bucket.file(fileName);
     
     const blobStream = fileUpload.createWriteStream({
       metadata: {
         contentType: file.mimetype,
       },
+      resumable: false // For smaller files, this is faster
     });
 
     return new Promise((resolve, reject) => {
       blobStream.on('error', (error) => {
         console.error('Blob stream error:', error);
-        reject(error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        
+        // Handle specific Firebase Storage errors
+        if (error.code === 'ENOTFOUND') {
+          reject(new Error('Firebase Storage service not found. Check your bucket configuration.'));
+        } else if (error.code === 'UNAUTHENTICATED') {
+          reject(new Error('Firebase Storage authentication failed. Check your service account credentials.'));
+        } else if (error.code === 'PERMISSION_DENIED') {
+          reject(new Error('Firebase Storage permission denied. Check your bucket permissions.'));
+        } else {
+          reject(new Error(`Firebase Storage upload failed: ${error.message}`));
+        }
       });
 
       blobStream.on('finish', async () => {
         try {
+          console.log('File upload completed, making public...');
+          
           // Make the file public
           await fileUpload.makePublic();
           
@@ -81,14 +122,31 @@ async function uploadImageToFirebase(file, folder = 'products') {
           });
         } catch (publicError) {
           console.error('Error making file public:', publicError);
-          reject(publicError);
+          console.error('Public error code:', publicError.code);
+          console.error('Public error message:', publicError.message);
+          
+          // Even if making public fails, the file was uploaded
+          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+          
+          console.log('File uploaded but could not make public. URL:', publicUrl);
+          
+          resolve({
+            id: uuidv4(),
+            filename: fileName,
+            url: publicUrl,
+            uploadedAt: new Date().toISOString(),
+            warning: 'File uploaded but may not be publicly accessible'
+          });
         }
       });
 
+      // Start the upload
+      console.log('Starting file upload...');
       blobStream.end(file.buffer);
     });
   } catch (error) {
     console.error('Firebase Storage upload error:', error);
+    console.error('Error stack:', error.stack);
     throw new Error(`Error uploading image to Firebase Storage: ${error.message}`);
   }
 }
@@ -1113,6 +1171,33 @@ app.get('/api/test-storage', async (req, res) => {
     console.error('Firebase Storage test failed:', error);
     res.status(500).json({ 
       message: 'Firebase Storage test failed', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test Firebase Storage upload with a simple text file
+app.post('/api/test-upload', upload.single('testFile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    
+    console.log('Testing upload with file:', req.file.originalname);
+    
+    // Try to upload to Firebase Storage
+    const result = await uploadImageToFirebase(req.file, 'test');
+    
+    res.json({
+      message: 'Test upload successful',
+      result: result,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Test upload failed:', error);
+    res.status(500).json({
+      message: 'Test upload failed',
       error: error.message,
       timestamp: new Date().toISOString()
     });
