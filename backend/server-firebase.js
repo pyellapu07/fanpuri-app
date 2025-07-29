@@ -1499,12 +1499,23 @@ app.get('/api/test-email', async (req, res) => {
   }
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+// Global error handler
+app.use((error, req, res, next) => {
+  console.error('Global error handler caught:', error);
+  console.error('Error stack:', error.stack);
+  console.error('Request URL:', req.url);
+  console.error('Request method:', req.method);
+  console.error('Request body:', req.body);
+  
+  res.status(500).json({
+    message: 'Internal server error',
+    error: error.message,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    timestamp: new Date().toISOString()
+  });
 });
 
+// Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT} (Firebase Mode)`);
   console.log(`Admin interface: http://localhost:${PORT}/admin.html`);
